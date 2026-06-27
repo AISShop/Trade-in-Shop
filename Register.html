@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ลงทะเบียนพนักงาน — AIS Trade-in</title>
+<style>
+  :root{
+    --green:#0A5C36; --green2:#0d7344; --lime:#8DC63F; --ink:#0d1620;
+    --panel:#16202b; --panel2:#1d2a37; --line:#2a3a48; --muted:#8aa0b2;
+    --txt:#e8eef3; --danger:#e0533d; --ok:#3dba6f;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:'Sarabun','Segoe UI',system-ui,sans-serif;
+       background:var(--ink);color:var(--txt);font-size:15px;line-height:1.5}
+  .top{background:linear-gradient(135deg,var(--green),var(--green2));padding:18px 16px 22px}
+  .top .row{display:flex;align-items:center;gap:11px}
+  .logo{width:36px;height:36px;border-radius:9px;background:var(--lime);
+       display:grid;place-items:center;font-weight:800;color:var(--green);font-size:18px}
+  .top h1{font-size:17px;margin:0;font-weight:700}
+  .top p{margin:2px 0 0;font-size:12px;opacity:.85}
+  .env{font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(0,0,0,.25);
+       border:1px solid rgba(255,255,255,.15);margin-left:auto}
+  .wrap{max-width:540px;margin:0 auto;padding:16px 16px 90px}
+  /* LINE profile card (auto) */
+  .prof{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+       padding:15px;margin-bottom:18px;display:flex;align-items:center;gap:13px}
+  .prof img{width:52px;height:52px;border-radius:50%;object-fit:cover;background:var(--panel2)}
+  .prof .nm{font-weight:700;font-size:16px}
+  .prof .uid{font-size:11px;color:var(--muted);font-family:monospace;word-break:break-all;margin-top:2px}
+  .prof .tag{font-size:10px;color:var(--lime);text-transform:uppercase;letter-spacing:.5px}
+  .fld{margin-bottom:16px}
+  .fld>label{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
+  .fld .req{color:var(--lime)}
+  input[type=text],select{width:100%;background:var(--panel);border:1px solid var(--line);
+       border-radius:11px;padding:12px 13px;color:var(--txt);font-size:15px;font-family:inherit}
+  select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%238aa0b2' stroke-width='1.5' fill='none'/></svg>");
+       background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+  .choice{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .choice button{padding:14px;border-radius:12px;border:1.5px solid var(--line);
+       background:var(--panel);color:var(--txt);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+  .choice button.sel{border-color:var(--lime);background:rgba(141,198,63,.13);color:var(--lime)}
+  .hidden{display:none}
+  .submit{position:fixed;bottom:0;left:0;right:0;padding:13px 16px;
+       background:linear-gradient(to top,var(--ink) 70%,transparent);max-width:540px;margin:0 auto}
+  .submit button{width:100%;padding:15px;border-radius:13px;border:0;
+       background:var(--lime);color:var(--green);font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
+  .submit button:disabled{opacity:.5}
+  .toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:var(--panel2);
+       border:1px solid var(--line);padding:12px 18px;border-radius:11px;font-size:14px;z-index:99;
+       opacity:0;transition:.3s;pointer-events:none;max-width:90%}
+  .toast.show{opacity:1;bottom:94px} .toast.ok{border-color:var(--ok)} .toast.err{border-color:var(--danger)}
+  .loading{text-align:center;padding:60px 20px;color:var(--muted)}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--lime);
+       border-radius:50%;margin:0 auto 14px;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .ok-screen{text-align:center;padding:50px 20px}
+  .ok-screen .big{width:72px;height:72px;border-radius:50%;background:rgba(61,186,111,.15);
+       color:var(--ok);display:grid;place-items:center;font-size:36px;margin:0 auto 18px}
+  .already{background:rgba(224,169,61,.12);border:1px solid rgba(224,169,61,.4);
+       border-radius:12px;padding:13px 15px;font-size:13px;margin-bottom:16px}
+  .cfg{text-align:center;font-size:11px;color:var(--muted);margin-top:20px}
+  .cfg a{color:var(--lime);cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="row">
+    <div class="logo">A</div>
+    <div>
+      <h1>ลงทะเบียนพนักงาน</h1>
+      <p>AIS Trade-in System · ลงทะเบียนครั้งเดียว</p>
+    </div>
+    <span class="env" id="env" style="display:none">LIVE</span>
+  </div>
+</div>
+
+<!-- loading while LIFF inits -->
+<div class="wrap" id="loadView">
+  <div class="loading"><div class="spin"></div>กำลังเชื่อมต่อ LINE...</div>
+</div>
+
+<!-- main form -->
+<div class="wrap hidden" id="formView">
+  <div class="prof">
+    <img id="pAv" src="">
+    <div>
+      <div class="tag">LINE Profile</div>
+      <div class="nm" id="pName">—</div>
+      <div class="uid" id="pUid">—</div>
+    </div>
+  </div>
+
+  <div class="already hidden" id="alreadyBox">
+    คุณลงทะเบียนไว้แล้ว — บันทึกซ้ำจะอัปเดตข้อมูลเดิม
+  </div>
+
+  <div class="fld">
+    <label>ประเภทพนักงาน <span class="req">*</span></label>
+    <div class="choice">
+      <button id="tAis" onclick="setType('ais')">AIS Staff</button>
+      <button id="tPc" onclick="setType('pc')">PC Staff</button>
+    </div>
+  </div>
+
+  <div class="fld">
+    <label>ชื่อ-สกุล / Username <span class="req">*</span></label>
+    <input type="text" id="fName" placeholder="เช่น สมชาย ใจดี" oninput="refresh()">
+  </div>
+
+  <div class="fld">
+    <label>สาขา <span class="req">*</span></label>
+    <select id="fBranch" onchange="refresh()">
+      <option value="">— เลือกสาขา —</option>
+    </select>
+  </div>
+
+  <div class="fld hidden" id="brandFld">
+    <label>Brand <span class="req">*</span></label>
+    <select id="fBrand" onchange="refresh()">
+      <option value="">— เลือก Brand —</option>
+      <option>Samsung</option><option>OPPO</option><option>vivo</option>
+      <option>Xiaomi</option><option>realme</option><option>Apple</option>
+      <option>HONOR</option><option>Infinix</option><option>TECNO</option><option>อื่นๆ</option>
+    </select>
+  </div>
+
+  <div class="fld">
+    <label>PIN <span class="req">*</span></label>
+    <input type="text" id="fPin" inputmode="numeric" placeholder="เช่น 1234" oninput="refresh()">
+  </div>
+
+  <div class="cfg" style="display:none">
+    <a onclick="setBackend()">cfg</a>
+  </div>
+</div>
+
+<!-- success -->
+<div class="wrap hidden" id="okView">
+  <div class="ok-screen">
+    <div class="big">✓</div>
+    <h2>ลงทะเบียนสำเร็จ</h2>
+    <p style="color:var(--muted)" id="okMsg">บันทึกข้อมูลเรียบร้อยแล้ว</p>
+    <p style="color:var(--muted);font-size:13px">ตอนนี้คุณสามารถเปิดฟอร์มบันทึก Trade-in ได้เลย</p>
+  </div>
+</div>
+
+<div class="submit hidden" id="submitBar">
+  <button id="submitBtn" onclick="submitReg()" disabled>กรอกข้อมูลให้ครบ</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- LIFF SDK -->
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+/* ============ CONFIG ============ */
+var LIFF_ID     = '2010528672-lVzyRuM5';  // LIFF app
+var BACKEND_URL = localStorage.getItem('adminBackendUrl') || 'https://script.google.com/macros/s/AKfycbxnFHnV6xFxZgl3JncF3VTf10Lmm6ewrEjADfcKRpKNIbpRzyYG0CWGIko9ZLmgNCdmDA/exec';
+
+var BRANCHES = ['Shop Central Phuket Festival','Shop Central Phuket Floresta','Shop Central Surat Thani',
+  'Shop Central Samui','Shop Central Nakhon Si Thammarat','Shop Central Hat Yai',
+  'Shop Serenade Club Central Festival Hat Yai','Shop Hatyai Village','Shop Robinson Trang'];
+
+var prof = { uid:'', name:'', picture:'' };
+var state = { type:'', existing:null };
+
+/* ============ init ============ */
+function boot(){
+  // fill branches
+  var sel=document.getElementById('fBranch');
+  BRANCHES.forEach(function(b){ sel.innerHTML+='<option>'+b+'</option>'; });
+  document.getElementById('env').textContent=(LIFF_ID&&BACKEND_URL)?'LIVE':'MOCK';
+  document.getElementById('cfgUrl').textContent=BACKEND_URL||'— (mock)';
+
+  if(!LIFF_ID){ // mock profile
+    prof={uid:'Umock1234567890abcdef',name:'พนักงาน ทดสอบ',picture:''};
+    afterProfile();
+    return;
+  }
+  liff.init({liffId:LIFF_ID}).then(function(){
+    if(!liff.isLoggedIn()){ liff.login(); return; }
+    return liff.getProfile().then(function(p){
+      prof.uid=p.userId; prof.name=p.displayName; prof.picture=p.pictureUrl||'';
+      afterProfile();
+    });
+  }).catch(function(e){
+    toast('LIFF error: '+(e.message||e),'err');
+    // fall back so page is still usable
+    prof={uid:'',name:'(LIFF ไม่พร้อม)',picture:''};
+    afterProfile();
+  });
+}
+
+function afterProfile(){
+  document.getElementById('pName').textContent=prof.name;
+  document.getElementById('pUid').textContent=prof.uid||'(no userId)';
+  var av=document.getElementById('pAv');
+  if(prof.picture) av.src=prof.picture;
+  else { av.style.background='var(--panel2)'; }
+  document.getElementById('loadView').classList.add('hidden');
+  document.getElementById('formView').classList.remove('hidden');
+  document.getElementById('submitBar').classList.remove('hidden');
+  checkExisting();
+}
+
+/* ============ check if already registered ============ */
+function checkExisting(){
+  if(!BACKEND_URL || !prof.uid) return;
+  var cb='__c'+Date.now();
+  window[cb]=function(res){
+    if(res&&res.ok){
+      var found=null;
+      ['ais','pc'].forEach(function(t){
+        (res.data[t]||[]).forEach(function(r){ if(r.uid===prof.uid){ found={type:t,rec:r}; } });
+      });
+      if(found){
+        state.existing=found;
+        document.getElementById('alreadyBox').classList.remove('hidden');
+        setType(found.type);
+        document.getElementById('fName').value=found.rec.name||'';
+        document.getElementById('fBranch').value=found.rec.branch||'';
+        document.getElementById('fPin').value=found.rec.pin||'';
+        if(found.type==='pc'&&found.rec.brand) document.getElementById('fBrand').value=found.rec.brand;
+        refresh();
+      }
+    }
+  };
+  var s=document.createElement('script');
+  s.src=BACKEND_URL+'?action=list&includeDeleted=1&cb='+cb;
+  document.body.appendChild(s);
+}
+
+/* ============ form logic ============ */
+function setType(t){
+  state.type=t;
+  document.getElementById('tAis').className=(t==='ais')?'sel':'';
+  document.getElementById('tPc').className=(t==='pc')?'sel':'';
+  document.getElementById('brandFld').className='fld'+(t==='pc'?'':' hidden');
+  refresh();
+}
+function refresh(){
+  var btn=document.getElementById('submitBtn');
+  var ok=state.type && document.getElementById('fName').value.trim() &&
+         document.getElementById('fBranch').value && document.getElementById('fPin').value.trim();
+  if(state.type==='pc' && !document.getElementById('fBrand').value) ok=false;
+  btn.disabled=!ok;
+  btn.textContent=ok?(state.existing?'อัปเดตข้อมูล':'ลงทะเบียน'):'กรอกข้อมูลให้ครบ';
+}
+
+/* ============ submit ============ */
+function submitReg(){
+  var p={
+    type:state.type,
+    name:document.getElementById('fName').value.trim(),
+    branch:document.getElementById('fBranch').value,
+    pin:document.getElementById('fPin').value.trim(),
+    lineId:prof.name, picture:prof.picture, uid:prof.uid
+  };
+  if(state.type==='pc') p.brand=document.getElementById('fBrand').value;
+  p.action = state.existing ? 'update' : 'register';
+  if(state.existing) p.id=state.existing.rec.id;
+
+  var btn=document.getElementById('submitBtn');
+  btn.disabled=true; btn.textContent='กำลังบันทึก...';
+
+  if(!BACKEND_URL){ setTimeout(function(){ showOk('(mock) ยังไม่บันทึกจริง'); },700); return; }
+  var cb='__r'+Date.now();
+  window[cb]=function(res){
+    if(res&&res.ok) showOk(state.existing?'อัปเดตเรียบร้อย':'ลงทะเบียนสำเร็จ (ID: '+(res.id||'-')+')');
+    else { toast((res&&res.error)||'บันทึกล้มเหลว','err'); btn.disabled=false; refresh(); }
+  };
+  var qs=Object.keys(p).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(p[k]);}).join('&');
+  var s=document.createElement('script');
+  s.onerror=function(){ toast('เชื่อมต่อไม่ได้','err'); btn.disabled=false; refresh(); };
+  s.src=BACKEND_URL+'?'+qs+'&cb='+cb;
+  document.body.appendChild(s);
+}
+function showOk(msg){
+  document.getElementById('okMsg').textContent=msg;
+  document.getElementById('formView').classList.add('hidden');
+  document.getElementById('submitBar').classList.add('hidden');
+  document.getElementById('okView').classList.remove('hidden');
+}
+
+/* ============ util ============ */
+function setBackend(){
+  var u=prompt('วาง /exec URL ของ AdminBackend (เว้นว่าง = mock):',BACKEND_URL);
+  if(u===null)return;
+  BACKEND_URL=u.trim();
+  if(BACKEND_URL)localStorage.setItem('adminBackendUrl',BACKEND_URL);
+  else localStorage.removeItem('adminBackendUrl');
+  document.getElementById('cfgUrl').textContent=BACKEND_URL||'— (mock)';
+  document.getElementById('env').textContent=(LIFF_ID&&BACKEND_URL)?'LIVE':'MOCK';
+  checkExisting();
+}
+var tT;
+function toast(msg,kind){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show '+(kind||'');
+  clearTimeout(tT); tT=setTimeout(function(){t.className='toast';},2600);
+}
+
+boot();
+</script>
+</body>
+</html>
