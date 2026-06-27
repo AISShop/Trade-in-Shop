@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIS Staff Admin — Trade-in</title>
+<style>
+  @font-face{
+    font-family:'DB Heavent';
+    src:url('DB_Heavent_Med_Cond_v3_2.ttf') format('truetype');
+    font-weight:400;
+    font-display:swap;
+  }
+  @font-face{
+    font-family:'DB Heavent';
+    src:url('DBHeavent-BlackCond.ttf') format('truetype');
+    font-weight:700;
+    font-display:swap;
+  }
+  :root{
+    --green:#0A5C36; --lime:#8DC63F; --ink:#0f1722; --panel:#16202b;
+    --panel2:#1d2a37; --line:#2a3a48; --muted:#8aa0b2; --txt:#e8eef3;
+    --danger:#e0533d; --warn:#e0a93d; --ok:#3dba6f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'DB Heavent','Sarabun','Segoe UI',system-ui,sans-serif;background:var(--ink);color:var(--txt);font-size:14px}
+  header{background:linear-gradient(135deg,var(--green),#0d7344);padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+  header .logo{width:34px;height:34px;border-radius:8px;background:var(--lime);display:grid;place-items:center;font-weight:800;color:var(--green)}
+  header h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.3px}
+  header .who{margin-left:auto;font-size:12px;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:10px}
+  header .out{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.2);color:#fff;padding:5px 11px;border-radius:8px;cursor:pointer;font-size:12px}
+  .wrap{max-width:1150px;margin:0 auto;padding:16px}
+  .tabs{display:flex;gap:6px;background:var(--panel);padding:4px;border-radius:10px;margin-bottom:14px}
+  .tabs button{background:none;border:0;color:var(--muted);padding:9px 16px;border-radius:7px;cursor:pointer;font-weight:600;font-size:13px}
+  .tabs button.on{background:var(--green);color:#fff}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  .subtabs{display:flex;gap:6px}
+  .subtabs button{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px}
+  .subtabs button.on{background:var(--green);color:#fff;border-color:var(--green)}
+  .grow{flex:1}
+  .search,select.inp,input.inp{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 12px;color:var(--txt);min-width:150px;font-family:inherit;font-size:13px}
+  input.inp{min-width:auto}
+  .chk{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;background:var(--panel);padding:7px 11px;border-radius:9px;border:1px solid var(--line);cursor:pointer}
+  .btn{background:var(--lime);color:var(--green);border:0;padding:9px 15px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px}
+  .btn.ghost{background:var(--panel);color:var(--txt);border:1px solid var(--line)}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;min-width:110px}
+  .stat .n{font-size:24px;font-weight:800;color:var(--lime)}
+  .stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+  th{background:var(--panel2);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0}
+  tr:hover td{background:rgba(141,198,63,.05)}
+  tr.del td{opacity:.45}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
+  .pill.on,.pill.acc{background:rgba(61,186,111,.16);color:var(--ok)}
+  .pill.off,.pill.noacc{background:rgba(224,83,61,.16);color:var(--danger)}
+  .pic{width:30px;height:30px;border-radius:50%;object-fit:cover;background:var(--panel2);vertical-align:middle}
+  .nm{font-weight:600}.sub{font-size:11px;color:var(--muted)}
+  .acts{display:flex;gap:5px;flex-wrap:wrap}
+  .ico{background:var(--panel2);border:1px solid var(--line);color:var(--txt);width:30px;height:30px;border-radius:7px;cursor:pointer;display:grid;place-items:center;font-size:13px}
+  .ico:hover{border-color:var(--lime)}.ico.danger:hover{border-color:var(--danger);color:var(--danger)}
+  .thumb{width:46px;height:46px;border-radius:8px;object-fit:cover;background:var(--panel2);cursor:pointer;border:1px solid var(--line)}
+  .nothumb{width:46px;height:46px;border-radius:8px;background:var(--panel2);display:grid;place-items:center;color:var(--muted);font-size:18px}
+  .empty{padding:40px;text-align:center;color:var(--muted)}
+  .ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:50;padding:16px}
+  .ov.show{display:grid}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:100%;max-width:460px;padding:20px;max-height:90vh;overflow:auto}
+  .modal h3{margin:0 0 14px}
+  .fld{margin-bottom:12px}.fld label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+  .fld input,.fld select{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--txt);font-size:13px;font-family:inherit}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .mfoot{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);padding:11px 18px;border-radius:10px;font-size:13px;z-index:99;opacity:0;transition:.3s;pointer-events:none}
+  .toast.show{opacity:1;bottom:30px}.toast.ok{border-color:var(--ok)}.toast.err{border-color:var(--danger)}
+  .login{position:fixed;inset:0;background:var(--ink);display:grid;place-items:center;z-index:100;padding:16px}
+  .loginbox{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:32px 26px;width:100%;max-width:360px;text-align:center}
+  .loginbox .logo{width:54px;height:54px;border-radius:13px;background:var(--lime);color:var(--green);display:grid;place-items:center;font-weight:800;font-size:26px;margin:0 auto 16px}
+  .loginbox h2{margin:0 0 4px;font-size:19px}.loginbox p{margin:0 0 22px;color:var(--muted);font-size:13px}
+  .loginbox input{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--txt);font-size:14px;margin-bottom:11px;font-family:inherit}
+  .loginbox button{width:100%;padding:13px;border-radius:10px;border:0;background:var(--lime);color:var(--green);font-weight:800;font-size:15px;cursor:pointer}
+  .loginbox button:disabled{opacity:.5}
+  .lerr{color:var(--danger);font-size:12px;min-height:16px;margin-bottom:8px}
+  .imgmodal{background:none;border:0;max-width:92vw;max-height:88vh;padding:0}
+  .imgmodal img{max-width:100%;max-height:88vh;border-radius:12px;display:block}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+
+<div class="login" id="loginGate">
+  <div class="loginbox">
+    <div class="logo">A</div>
+    <h2>AIS Staff Admin</h2>
+    <p>เข้าสู่ระบบเพื่อจัดการข้อมูล</p>
+    <div class="lerr" id="lerr"></div>
+    <input id="luser" placeholder="Username" autocomplete="username">
+    <input id="lpass" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button id="lbtn" onclick="doLogin()">เข้าสู่ระบบ</button>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+<header>
+  <div class="logo">A</div>
+  <h1>AIS Staff Admin</h1>
+  <div class="who"><span id="whoami"></span><button class="out" onclick="logout()">ออกจากระบบ</button></div>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="on" data-main="staff" onclick="mainTab('staff')">ทะเบียนพนักงาน</button>
+    <button data-main="trade" onclick="mainTab('trade')">ข้อมูล Trade-in</button>
+  </div>
+
+  <div id="staffView">
+    <div class="stats" id="staffStats"></div>
+    <div class="bar">
+      <div class="subtabs">
+        <button class="on" data-type="ais" onclick="switchType('ais')">AIS Staff</button>
+        <button data-type="pc" onclick="switchType('pc')">PC Staff</button>
+      </div>
+      <div class="grow"></div>
+      <input class="search" id="sSearch" placeholder="ค้นหา ชื่อ / สาขา..." oninput="renderStaff()">
+      <label class="chk"><input type="checkbox" id="showDel" onchange="renderStaff()"> แสดงที่ลบแล้ว</label>
+      <button class="btn" onclick="openAdd()">+ เพิ่มพนักงาน</button>
+      <button class="btn ghost" onclick="loadStaff()">↻</button>
+    </div>
+    <div class="card">
+      <table><thead id="sThead"></thead><tbody id="sTbody"></tbody></table>
+      <div class="empty" id="sEmpty" style="display:none">ไม่พบข้อมูล</div>
+    </div>
+  </div>
+
+  <div id="tradeView" class="hidden">
+    <div class="stats" id="tStats"></div>
+    <div class="bar">
+      <select class="inp" id="tPeriod" onchange="onPeriodChange()">
+        <option value="today">วันนี้</option>
+        <option value="week">สัปดาห์นี้</option>
+        <option value="month">เดือนนี้</option>
+        <option value="all">ทั้งหมด</option>
+        <option value="range">เลือกช่วงวันเอง</option>
+      </select>
+      <input class="inp" type="date" id="tFrom" style="display:none" onchange="renderTrade()">
+      <input class="inp" type="date" id="tTo" style="display:none" onchange="renderTrade()">
+      <div class="grow"></div>
+      <input class="search" id="tSearch" placeholder="ค้นหา ชื่อ / สาขา..." oninput="renderTrade()">
+      <select class="inp" id="tAccept" onchange="renderTrade()">
+        <option value="">ทั้งหมด</option>
+        <option value="ตอบรับ">ตอบรับ</option>
+        <option value="ไม่ตอบรับ">ไม่ตอบรับ</option>
+      </select>
+      <button class="btn ghost" onclick="loadTrade()">↻</button>
+    </div>
+    <div class="card">
+      <table><thead id="tThead"></thead><tbody id="tTbody"></tbody></table>
+      <div class="empty" id="tEmpty" style="display:none">ไม่พบข้อมูล</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="ov" id="ov">
+  <div class="modal">
+    <h3 id="mTitle">เพิ่มพนักงาน</h3>
+    <input type="hidden" id="f_id">
+    <div class="fld"><label>ชื่อ (Username/Name)</label><input id="f_name"></div>
+    <div class="row2">
+      <div class="fld"><label>PIN</label><input id="f_pin"></div>
+      <div class="fld" id="brandFld"><label>Brand</label><input id="f_brand"></div>
+    </div>
+    <div class="fld"><label>สาขา (Branch)</label><select id="f_branch"></select></div>
+    <div class="mfoot">
+      <button class="btn ghost" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn" onclick="saveStaff()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="imgOv" onclick="closeImg()">
+  <div class="imgmodal"><img id="imgBig" src=""></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var ADMIN_URL   = 'https://script.google.com/macros/s/AKfycbxnFHnV6xFxZgl3JncF3VTf10Lmm6ewrEjADfcKRpKNIbpRzyYG0CWGIko9ZLmgNCdmDA/exec';
+var TRADEIN_URL = 'https://script.google.com/macros/s/AKfycbx8sSMqC7t-9w6M38vElZnEZ4IlxZ_Zf6-Rd_pDLx2IMxowqHptrNE-BfxPYbZ2CT-YVQ/exec';
+
+var BRANCHES = ['Shop Central Phuket Festival','Shop Central Phuket Floresta','Shop Central Surat Thani',
+  'Shop Central Samui','Shop Central Nakhon Si Thammarat','Shop Central Hat Yai',
+  'Shop Serenade Club Central Festival Hat Yai','Shop Hatyai Village','Shop Robinson Trang'];
+
+var curType='ais', curMain='staff';
+var DB={ais:[],pc:[]};
+var TRADE=[];
+
+function jsonp(base,params){
+  return new Promise(function(resolve,reject){
+    var cb='__cb'+Date.now()+Math.floor(Math.random()*1000);
+    var qs=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
+    var s=document.createElement('script');
+    var to=setTimeout(function(){cleanup();reject({error:'timeout'});},15000);
+    function cleanup(){clearTimeout(to);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);}
+    window[cb]=function(res){cleanup();resolve(res);};
+    s.onerror=function(){cleanup();reject({error:'network'});};
+    s.src=base+'?'+qs+'&cb='+cb;
+    document.body.appendChild(s);
+  });
+}
+
+function doLogin(){
+  var u=document.getElementById('luser').value.trim();
+  var p=document.getElementById('lpass').value;
+  var btn=document.getElementById('lbtn'); var err=document.getElementById('lerr');
+  err.textContent='';
+  if(!u||!p){ err.textContent='กรอก username และ password'; return; }
+  btn.disabled=true; btn.textContent='กำลังตรวจสอบ...';
+  jsonp(ADMIN_URL,{action:'login',user:u,pass:p}).then(function(res){
+    if(res&&res.ok){
+      sessionStorage.setItem('adminAuth','1'); sessionStorage.setItem('adminUser',u);
+      enterApp(u);
+    } else { err.textContent='username หรือ password ไม่ถูกต้อง'; btn.disabled=false; btn.textContent='เข้าสู่ระบบ'; }
+  }).catch(function(){ err.textContent='เชื่อมต่อไม่ได้ ลองใหม่'; btn.disabled=false; btn.textContent='เข้าสู่ระบบ'; });
+}
+function enterApp(u){
+  document.getElementById('loginGate').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('whoami').textContent=u;
+  var sel=document.getElementById('f_branch');
+  sel.innerHTML='<option value="">— เลือกสาขา —</option>';
+  BRANCHES.forEach(function(b){ sel.innerHTML+='<option>'+b+'</option>'; });
+  loadStaff();
+}
+function logout(){ sessionStorage.removeItem('adminAuth'); sessionStorage.removeItem('adminUser'); location.reload(); }
+
+function mainTab(m){
+  curMain=m;
+  document.querySelectorAll('.tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.main===m);});
+  document.getElementById('staffView').classList.toggle('hidden',m!=='staff');
+  document.getElementById('tradeView').classList.toggle('hidden',m!=='trade');
+  if(m==='trade' && !TRADE.length) loadTrade();
+}
+
+function loadStaff(){
+  jsonp(ADMIN_URL,{action:'list',includeDeleted:1}).then(function(res){
+    if(res&&res.ok){ DB.ais=res.data.ais||[]; DB.pc=res.data.pc||[]; renderStaff(); }
+    else toast((res&&res.error)||'โหลดล้มเหลว','err');
+  }).catch(function(){ toast('เชื่อมต่อไม่ได้','err'); });
+}
+function switchType(t){
+  curType=t;
+  document.querySelectorAll('.subtabs button').forEach(function(b){b.classList.toggle('on',b.dataset.type===t);});
+  document.getElementById('brandFld').style.display=(t==='pc')?'block':'none';
+  renderStaff();
+}
+function renderStaff(){
+  var rows=DB[curType]||[];
+  var showDel=document.getElementById('showDel').checked;
+  var q=document.getElementById('sSearch').value.trim().toLowerCase();
+  var list=rows.filter(function(r){
+    if(r.deleted&&!showDel)return false;
+    if(!q)return true;
+    return [r.name,r.branch,r.brand].join(' ').toLowerCase().indexOf(q)>=0;
+  });
+  var all=rows.filter(function(r){return !r.deleted;});
+  var act=all.filter(function(r){return r.active;});
+  var del=rows.filter(function(r){return r.deleted;});
+  document.getElementById('staffStats').innerHTML=
+    stat(all.length,'ทั้งหมด')+stat(act.length,'Active')+stat(all.length-act.length,'Inactive')+stat(del.length,'ลบแล้ว');
+  var isPc=curType==='pc';
+  document.getElementById('sThead').innerHTML=
+    '<tr><th>ID</th><th>พนักงาน</th>'+(isPc?'<th>Brand</th>':'')+'<th>สาขา</th><th>PIN</th><th>Active</th><th>อัปเดต</th><th></th></tr>';
+  var tb=document.getElementById('sTbody'); tb.innerHTML='';
+  document.getElementById('sEmpty').style.display=list.length?'none':'block';
+  list.forEach(function(r){
+    var tr=document.createElement('tr'); if(r.deleted)tr.className='del';
+    var pic=r.picture?'<img class="pic" src="'+r.picture+'">':'<span class="pic"></span>';
+    var a=r.deleted
+      ?'<button class="ico" title="กู้คืน" onclick="sAct(\''+r.id+'\',\'restore\')">↺</button>'
+      :'<button class="ico" title="แก้ไข" onclick="openEdit(\''+r.id+'\')">✎</button>'+
+       '<button class="ico" title="เปิด/ปิด" onclick="sAct(\''+r.id+'\',\'toggle\')">⏻</button>'+
+       '<button class="ico danger" title="ลบ" onclick="delStaff(\''+r.id+'\')">🗑</button>';
+    tr.innerHTML='<td><span class="sub">'+r.id+'</span></td>'+
+      '<td><div style="display:flex;align-items:center;gap:8px">'+pic+
+        '<div><div class="nm">'+esc(r.name)+'</div><div class="sub">'+esc(r.lineId||'')+'</div></div></div></td>'+
+      (isPc?'<td>'+esc(r.brand||'')+'</td>':'')+
+      '<td>'+esc(r.branch||'')+'</td>'+
+      '<td><span class="sub">'+esc(r.pin||'')+'</span></td>'+
+      '<td><span class="pill '+(r.active?'on':'off')+'">'+(r.active?'ON':'OFF')+'</span></td>'+
+      '<td><span class="sub">'+esc(r.updated||'')+'</span></td>'+
+      '<td><div class="acts">'+a+'</div></td>';
+    tb.appendChild(tr);
+  });
+}
+function stat(n,l){return '<div class="stat"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
+
+function openAdd(){
+  document.getElementById('mTitle').textContent='เพิ่มพนักงาน '+(curType==='pc'?'PC':'AIS');
+  ['f_id','f_name','f_pin','f_brand'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('f_branch').value='';
+  document.getElementById('brandFld').style.display=(curType==='pc')?'block':'none';
+  document.getElementById('ov').classList.add('show');
+}
+function openEdit(id){
+  var r=(DB[curType]||[]).find(function(x){return x.id===id;}); if(!r)return;
+  document.getElementById('mTitle').textContent='แก้ไข '+r.id;
+  document.getElementById('f_id').value=r.id;
+  document.getElementById('f_name').value=r.name||'';
+  document.getElementById('f_pin').value=r.pin||'';
+  document.getElementById('f_brand').value=r.brand||'';
+  document.getElementById('f_branch').value=r.branch||'';
+  document.getElementById('brandFld').style.display=(curType==='pc')?'block':'none';
+  document.getElementById('ov').classList.add('show');
+}
+function closeModal(){document.getElementById('ov').classList.remove('show');}
+function saveStaff(){
+  var id=document.getElementById('f_id').value;
+  var p={type:curType,name:document.getElementById('f_name').value.trim(),
+    pin:document.getElementById('f_pin').value.trim(),branch:document.getElementById('f_branch').value};
+  if(curType==='pc')p.brand=document.getElementById('f_brand').value.trim();
+  if(!p.name){toast('กรอกชื่อ','err');return;}
+  p.action=id?'update':'register'; if(id)p.id=id;
+  jsonp(ADMIN_URL,p).then(function(res){
+    if(res&&res.ok){toast(id?'แก้ไขสำเร็จ':'เพิ่มสำเร็จ','ok');closeModal();loadStaff();}
+    else toast((res&&res.error)||'บันทึกล้มเหลว','err');
+  }).catch(function(){toast('เชื่อมต่อไม่ได้','err');});
+}
+function delStaff(id){ if(!confirm('ลบพนักงานนี้? (กู้คืนได้ภายหลัง)'))return; sAct(id,'remove'); }
+function sAct(id,action){
+  jsonp(ADMIN_URL,{action:action,type:curType,id:id}).then(function(res){
+    if(res&&res.ok){toast('สำเร็จ','ok');loadStaff();}
+    else toast((res&&res.error)||'ล้มเหลว','err');
+  }).catch(function(){toast('เชื่อมต่อไม่ได้','err');});
+}
+
+function loadTrade(){
+  jsonp(TRADEIN_URL,{action:'list',limit:500}).then(function(res){
+    if(res&&res.ok){ TRADE=res.data||[]; renderTrade(); }
+    else toast((res&&res.error)||'โหลดล้มเหลว','err');
+  }).catch(function(){ toast('เชื่อมต่อไม่ได้','err'); });
+}
+function onPeriodChange(){
+  var v=document.getElementById('tPeriod').value;
+  var show=(v==='range');
+  document.getElementById('tFrom').style.display=show?'block':'none';
+  document.getElementById('tTo').style.display=show?'block':'none';
+  renderTrade();
+}
+function inPeriod(tsStr){
+  var v=document.getElementById('tPeriod').value;
+  if(v==='all')return true;
+  var d=parseTs(tsStr); if(!d)return true;
+  var now=new Date();
+  if(v==='today')return sameDay(d,now);
+  if(v==='week'){ var wk=new Date(now); wk.setDate(now.getDate()-now.getDay()); wk.setHours(0,0,0,0); return d>=wk; }
+  if(v==='month')return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
+  if(v==='range'){
+    var f=document.getElementById('tFrom').value, t=document.getElementById('tTo').value;
+    if(f&&d<new Date(f+'T00:00:00'))return false;
+    if(t&&d>new Date(t+'T23:59:59'))return false;
+    return true;
+  }
+  return true;
+}
+function parseTs(s){ if(!s)return null; var m=/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(s); if(!m)return null; return new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]); }
+function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+
+function renderTrade(){
+  var q=document.getElementById('tSearch').value.trim().toLowerCase();
+  var acc=document.getElementById('tAccept').value;
+  var list=TRADE.filter(function(r){
+    if(!inPeriod(r.ts))return false;
+    if(acc&&r.accept!==acc)return false;
+    if(q&&[r.name,r.branch].join(' ').toLowerCase().indexOf(q)<0)return false;
+    return true;
+  });
+  var accN=list.filter(function(r){return r.accept==='ตอบรับ';}).length;
+  document.getElementById('tStats').innerHTML=
+    stat(list.length,'รายการ')+stat(accN,'ตอบรับ')+stat(list.length-accN,'ไม่ตอบรับ');
+  document.getElementById('tThead').innerHTML=
+    '<tr><th>เวลา</th><th>สาขา</th><th>พนักงาน</th><th>ผล</th><th>สาเหตุ</th><th>ร้าน/ราคา</th><th>รูป</th></tr>';
+  var tb=document.getElementById('tTbody'); tb.innerHTML='';
+  document.getElementById('tEmpty').style.display=list.length?'none':'block';
+  list.forEach(function(r){
+    var acc=r.accept==='ตอบรับ';
+    var img=acc?r.picAcc:r.picNoAcc;
+    var thumb=img?'<img class="thumb" src="'+toImg(img)+'" onclick="bigImg(\''+toImg(img)+'\')">':'<div class="nothumb">—</div>';
+    var reason=acc?'':[r.reasonNoAcc,r.reasonNoTrade].filter(Boolean).join(' / ');
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><span class="sub">'+esc(r.ts||'')+'</span></td>'+
+      '<td>'+esc(r.branch||'')+'</td>'+
+      '<td><div class="nm">'+esc(r.name||'')+'</div><div class="sub">'+esc(r.type||'')+'</div></td>'+
+      '<td><span class="pill '+(acc?'acc':'noacc')+'">'+esc(r.accept||'')+'</span></td>'+
+      '<td><span class="sub">'+esc(reason||'')+'</span></td>'+
+      '<td><span class="sub">'+esc(r.shopPrice||'')+'</span></td>'+
+      '<td>'+thumb+'</td>';
+    tb.appendChild(tr);
+  });
+}
+function toImg(u){
+  var m=/[-\w]{25,}/.exec(u||'');
+  if(m) return 'https://drive.google.com/thumbnail?id='+m[0]+'&sz=w1000';
+  return u;
+}
+function bigImg(u){ document.getElementById('imgBig').src=u; document.getElementById('imgOv').classList.add('show'); }
+function closeImg(){ document.getElementById('imgOv').classList.remove('show'); }
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var tT;
+function toast(msg,kind){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(kind||'');clearTimeout(tT);tT=setTimeout(function(){t.className='toast';},2600);}
+
+if(sessionStorage.getItem('adminAuth')==='1'){ enterApp(sessionStorage.getItem('adminUser')||'admin'); }
+</script>
+</body>
+</html>
