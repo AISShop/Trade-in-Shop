@@ -353,13 +353,28 @@ function afterProfile(){
   } else {
     av.textContent=(prof.name[0]||'?').toUpperCase();
   }
+  // แสดงฟอร์มทันที ไม่รอ lookup ทะเบียน (A)
   document.getElementById('loadView').classList.add('hidden');
   document.getElementById('formView').classList.remove('hidden');
   resolveStaff();
+  updatePhotoAsync(); // อัปเดตรูปเบื้องหลัง ไม่บล็อกฟอร์ม (B)
+}
+
+// อัปเดตรูปแบบ fire-and-forget (ไม่รอผล ไม่กระทบความเร็ว)
+function updatePhotoAsync(){
+  if(!STAFF_URL || !prof.uid || !prof.picture) return;
+  var cb='__up'+Date.now();
+  window[cb]=function(){ try{delete window[cb];}catch(e){} };
+  var s=document.createElement('script');
+  s.onerror=function(){};
+  s.src=STAFF_URL+'?action=updatePhoto&uid='+encodeURIComponent(prof.uid)+'&picture='+encodeURIComponent(prof.picture)+'&cb='+cb;
+  document.body.appendChild(s);
 }
 
 // look up this userId in the staff registry -> auto type/name/branch
 function resolveStaff(){
+  var sub=document.getElementById('whoSub');
+  if(sub)sub.textContent='กำลังตรวจสอบทะเบียน…';
   if(!STAFF_URL){ // mock
     applyReg(MOCK_REG[prof.uid]||null); return;
   }
@@ -370,7 +385,7 @@ function resolveStaff(){
   };
   var s=document.createElement('script');
   s.onerror=function(){ applyReg(null); toast('เชื่อมต่อทะเบียนไม่ได้','err'); };
-  s.src=STAFF_URL+'?action=whoami&uid='+encodeURIComponent(prof.uid)+'&picture='+encodeURIComponent(prof.picture||'')+'&cb='+cb;
+  s.src=STAFF_URL+'?action=whoami&uid='+encodeURIComponent(prof.uid)+'&cb='+cb;
   document.body.appendChild(s);
 }
 
