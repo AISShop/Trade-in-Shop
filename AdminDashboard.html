@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIS Staff Admin — Trade-in</title>
+<style>
+  @font-face{
+    font-family:'DB Heavent';
+    src:url('DB_Heavent_Med_Cond_v3_2.ttf') format('truetype');
+    font-weight:400;
+    font-display:swap;
+  }
+  @font-face{
+    font-family:'DB Heavent';
+    src:url('DBHeavent-BlackCond.ttf') format('truetype');
+    font-weight:700;
+    font-display:swap;
+  }
+  *{font-family:'DB Heavent','Sarabun','Segoe UI',system-ui,sans-serif !important}
+  button,input,select,textarea,a{font-family:'DB Heavent','Sarabun','Segoe UI',system-ui,sans-serif}
+  :root{
+    --green:#0A5C36; --lime:#8DC63F; --ink:#0f1722; --panel:#16202b;
+    --panel2:#1d2a37; --line:#2a3a48; --muted:#8aa0b2; --txt:#e8eef3;
+    --danger:#e0533d; --warn:#e0a93d; --ok:#3dba6f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'DB Heavent','Sarabun','Segoe UI',system-ui,sans-serif;background:var(--ink);color:var(--txt);font-size:18px}
+  header{background:linear-gradient(135deg,var(--green),#0d7344);padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+  header .logo{width:34px;height:34px;border-radius:8px;background:var(--lime);display:grid;place-items:center;font-weight:800;color:var(--green)}
+  header h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.3px}
+  header .who{margin-left:auto;font-size:12px;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:10px}
+  header .out{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.2);color:#fff;padding:5px 11px;border-radius:8px;cursor:pointer;font-size:12px}
+  .wrap{max-width:1150px;margin:0 auto;padding:16px}
+  .tabs{display:flex;gap:6px;background:var(--panel);padding:4px;border-radius:10px;margin-bottom:14px}
+  .tabs button{background:none;border:0;color:var(--muted);padding:9px 16px;border-radius:7px;cursor:pointer;font-weight:600;font-size:15px}
+  .tabs button.on{background:var(--green);color:#fff}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  .subtabs{display:flex;gap:6px}
+  .subtabs button{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px}
+  .subtabs button.on{background:var(--green);color:#fff;border-color:var(--green)}
+  .grow{flex:1}
+  .search,select.inp,input.inp{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 12px;color:var(--txt);min-width:150px;font-family:inherit;font-size:13px}
+  input.inp{min-width:auto}
+  .chk{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;background:var(--panel);padding:7px 11px;border-radius:9px;border:1px solid var(--line);cursor:pointer}
+  .btn{background:var(--lime);color:var(--green);border:0;padding:9px 15px;border-radius:9px;font-weight:700;cursor:pointer;font-size:13px}
+  .btn.ghost{background:var(--panel);color:var(--txt);border:1px solid var(--line)}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;min-width:110px}
+  .stat .n{font-size:24px;font-weight:800;color:var(--lime)}
+  .stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:16px;vertical-align:middle}
+  th{background:var(--panel2);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0}
+  tr:hover td{background:rgba(141,198,63,.05)}
+  tr.del td{opacity:.45}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
+  .pill.on,.pill.acc{background:rgba(61,186,111,.16);color:var(--ok)}
+  .pill.off,.pill.noacc{background:rgba(224,83,61,.16);color:var(--danger)}
+  .pic{width:30px;height:30px;border-radius:50%;object-fit:cover;background:var(--panel2);vertical-align:middle}
+  .picInit{display:inline-grid;place-items:center;background:var(--lime);color:#0a2a12;font-weight:700;font-size:13px}
+  .dashCell:hover{background:rgba(141,198,63,.1)}
+  #dashPop,#perfPop{position:absolute;z-index:9999;width:240px;max-height:340px;overflow-y:auto;
+    background:#1a2230;border:1px solid rgba(255,255,255,.18);border-radius:12px;
+    box-shadow:0 12px 32px rgba(0,0,0,.5);padding:8px;display:none}
+  #dashPop .dpHead,#perfPop .dpHead{font-size:11px;color:var(--muted);padding:4px 6px 8px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:6px}
+  #dashPop .dpRow,#perfPop .dpRow{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:8px}
+  #dashPop .dpRow img,#perfPop .dpRow img{width:32px;height:32px;border-radius:50%;object-fit:cover;flex:0 0 32px}
+  #dashPop .dpRow .noimg,#perfPop .dpRow .noimg{width:32px;height:32px;border-radius:50%;flex:0 0 32px;background:var(--lime);
+    color:#0a2a12;display:grid;place-items:center;font-weight:700;font-size:14px}
+  #dashPop .dpNm,#perfPop .dpNm{font-size:13px;font-weight:600}
+  #dashPop .dpRole,#perfPop .dpRole{font-size:11px;color:var(--muted)}
+  .nm{font-weight:600}.sub{font-size:11px;color:var(--muted)}
+  .acts{display:flex;gap:5px;flex-wrap:wrap}
+  .ico{background:var(--panel2);border:1px solid var(--line);color:var(--txt);width:30px;height:30px;border-radius:7px;cursor:pointer;display:grid;place-items:center;font-size:13px}
+  .ico:hover{border-color:var(--lime)}.ico.danger:hover{border-color:var(--danger);color:var(--danger)}
+  .thumb{width:46px;height:46px;border-radius:8px;object-fit:cover;background:var(--panel2);cursor:pointer;border:1px solid var(--line)}
+  .nothumb{width:46px;height:46px;border-radius:8px;background:var(--panel2);display:grid;place-items:center;color:var(--muted);font-size:18px}
+  .empty{padding:40px;text-align:center;color:var(--muted)}
+  .ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:50;padding:16px}
+  .ov.show{display:grid}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:100%;max-width:460px;padding:20px;max-height:90vh;overflow:auto}
+  .modal h3{margin:0 0 14px}
+  .fld{margin-bottom:12px}.fld label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+  .fld input,.fld select{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--txt);font-size:13px;font-family:inherit}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .mfoot{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);padding:11px 18px;border-radius:10px;font-size:13px;z-index:99;opacity:0;transition:.3s;pointer-events:none}
+  .toast.show{opacity:1;bottom:30px}.toast.ok{border-color:var(--ok)}.toast.err{border-color:var(--danger)}
+  .login{position:fixed;inset:0;background:var(--ink);display:grid;place-items:center;z-index:100;padding:16px}
+  .loginbox{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:32px 26px;width:100%;max-width:360px;text-align:center}
+  .loginbox .logo{width:54px;height:54px;border-radius:13px;background:var(--lime);color:var(--green);display:grid;place-items:center;font-weight:800;font-size:26px;margin:0 auto 16px}
+  .loginbox h2{margin:0 0 4px;font-size:19px}.loginbox p{margin:0 0 22px;color:var(--muted);font-size:13px}
+  .loginbox input{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--txt);font-size:14px;margin-bottom:11px;font-family:inherit}
+  .loginbox button{width:100%;padding:13px;border-radius:10px;border:0;background:var(--lime);color:var(--green);font-weight:800;font-size:15px;cursor:pointer}
+  .loginbox button:disabled{opacity:.5}
+  .lerr{color:var(--danger);font-size:12px;min-height:16px;margin-bottom:8px}
+  .imgmodal{background:none;border:0;max-width:92vw;max-height:88vh;padding:0}
+  .imgmodal img{max-width:100%;max-height:88vh;border-radius:12px;display:block}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+
+<div class="login" id="loginGate">
+  <div class="loginbox">
+    <div class="logo">A</div>
+    <h2>AIS Staff Admin</h2>
+    <p>เข้าสู่ระบบเพื่อจัดการข้อมูล</p>
+    <div class="lerr" id="lerr"></div>
+    <input id="luser" placeholder="Username" autocomplete="username">
+    <input id="lpass" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button id="lbtn" onclick="doLogin()">เข้าสู่ระบบ</button>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+<header>
+  <div class="logo">A</div>
+  <h1>AIS Staff Admin</h1>
+  <div class="who"><span id="whoami"></span><button class="out" onclick="logout()">ออกจากระบบ</button></div>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="on" data-main="staff" onclick="mainTab('staff')">ทะเบียนพนักงาน</button>
+    <button data-main="trade" onclick="mainTab('trade')">ข้อมูล Trade-in</button>
+    <button data-main="options" onclick="mainTab('options')">จัดการตัวเลือก</button>
+    <button data-main="dash" onclick="mainTab('dash')">Dashboard พนักงาน</button>
+    <button data-main="detail" onclick="mainTab('detail')">Detail Trade-in</button>
+    <button data-main="perf" onclick="mainTab('perf')">Staff Performance</button>
+    <button data-main="price" onclick="mainTab('price')">Price Ranking</button>
+    <button data-main="compare" onclick="mainTab('compare')">เทียบระบบจริง</button>
+    <button data-main="financing" onclick="mainTab('financing')">Financing</button>
+  </div>
+
+  <div id="staffView">
+    <div class="stats" id="staffStats"></div>
+    <div class="bar">
+      <div class="subtabs">
+        <button class="on" data-type="ais" onclick="switchType('ais')">AIS Staff</button>
+        <button data-type="pc" onclick="switchType('pc')">PC Staff</button>
+      </div>
+      <div class="grow"></div>
+      <input class="search" id="sSearch" placeholder="ค้นหา ชื่อ / สาขา..." oninput="renderStaff()">
+      <label class="chk"><input type="checkbox" id="showDel" onchange="renderStaff()"> แสดงที่ลบแล้ว</label>
+      <button class="btn" onclick="openAdd()">+ เพิ่มพนักงาน</button>
+      <button class="btn ghost" onclick="loadStaff()">↻</button>
+    </div>
+    <div class="card">
+      <table><thead id="sThead"></thead><tbody id="sTbody"></tbody></table>
+      <div class="empty" id="sEmpty" style="display:none">ไม่พบข้อมูล</div>
+    </div>
+  </div>
+
+  <div id="tradeView" class="hidden">
+    <div class="stats" id="tStats"></div>
+    <div class="bar">
+      <select class="inp" id="tPeriod" onchange="onPeriodChange()">
+        <option value="today">วันนี้</option>
+        <option value="week">สัปดาห์นี้</option>
+        <option value="month">เดือนนี้</option>
+        <option value="all">ทั้งหมด</option>
+        <option value="range">เลือกช่วงวันเอง</option>
+      </select>
+      <input class="inp" type="date" id="tFrom" style="display:none" onchange="renderTrade()">
+      <input class="inp" type="date" id="tTo" style="display:none" onchange="renderTrade()">
+      <div class="grow"></div>
+      <input class="search" id="tSearch" placeholder="ค้นหา ชื่อ / สาขา..." oninput="renderTrade()">
+      <select class="inp" id="tAccept" onchange="renderTrade()">
+        <option value="">ทั้งหมด</option>
+        <option value="ตอบรับ">ตอบรับ</option>
+        <option value="ไม่ตอบรับ">ไม่ตอบรับ</option>
+      </select>
+      <button class="btn ghost" onclick="loadTrade()">↻</button>
+    </div>
+    <div class="card">
+      <table><thead id="tThead"></thead><tbody id="tTbody"></tbody></table>
+      <div class="empty" id="tEmpty" style="display:none">ไม่พบข้อมูล</div>
+    </div>
+  </div>
+
+  <!-- ===== OPTIONS MANAGEMENT ===== -->
+  <div id="optionsView" class="hidden">
+    <p style="color:var(--muted);font-size:13px;margin:0 0 16px">จัดการตัวเลือก dropdown ในฟอร์มพนักงาน — เพิ่ม/ลบ/แก้ แล้วกดบันทึก พนักงานจะเห็นทันที</p>
+    <div style="display:grid;gap:16px;grid-template-columns:1fr 1fr">
+      <div class="card" style="padding:16px">
+        <div style="font-weight:700;margin-bottom:4px">สาเหตุที่ไม่ตอบรับ</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">"มีเครื่องเทรด" จะเปิดคำถามสาเหตุที่ไม่เทรด</div>
+        <div id="optNoAccept"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input class="search" id="newNoAccept" placeholder="เพิ่มตัวเลือกใหม่" style="flex:1">
+          <button class="btn ghost" onclick="addOpt('noAccept')">+ เพิ่ม</button>
+        </div>
+        <button class="btn" style="width:100%;margin-top:12px" onclick="saveOpt('noAccept')">บันทึกสาเหตุไม่ตอบรับ</button>
+      </div>
+      <div class="card" style="padding:16px">
+        <div style="font-weight:700;margin-bottom:4px">สาเหตุที่ไม่เทรด</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">"คู่แข่ง..." จะเปิดช่องระบุร้าน/ราคา</div>
+        <div id="optNoTrade"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input class="search" id="newNoTrade" placeholder="เพิ่มตัวเลือกใหม่" style="flex:1">
+          <button class="btn ghost" onclick="addOpt('noTrade')">+ เพิ่ม</button>
+        </div>
+        <button class="btn" style="width:100%;margin-top:12px" onclick="saveOpt('noTrade')">บันทึกสาเหตุไม่เทรด</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashView" class="hidden">
+    <p style="color:var(--muted);font-size:13px;margin:0 0 16px">สรุปจำนวนพนักงานแต่ละสาขา — AIS Staff (แยก AIS Pro Apple/Samsung) และ PC</p>
+    <div class="stats" id="dashTotals"></div>
+    <div class="card" style="margin-top:14px">
+      <table>
+        <thead><tr>
+          <th>สาขา</th>
+          <th style="text-align:center">รวมทั้งหมด</th>
+          <th style="text-align:center">AIS Staff</th>
+          <th style="text-align:center">└ Pro Apple</th>
+          <th style="text-align:center">└ Pro Samsung</th>
+          <th style="text-align:center">PC</th>
+        </tr></thead>
+        <tbody id="dashTbody"></tbody>
+      </table>
+      <div class="empty" id="dashEmpty" style="display:none">ไม่พบข้อมูล</div>
+    </div>
+  </div>
+
+  <div id="detailView" class="hidden">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+      <select id="dtPeriod" onchange="renderDetail()" style="max-width:220px">
+        <option value="today" selected>วันนี้</option>
+        <option value="yesterday">เมื่อวาน</option>
+        <option value="7">7 วันล่าสุด</option>
+        <option value="14">14 วันล่าสุด</option>
+        <option value="thisMonth">เดือนนี้</option>
+        <option value="lastMonth">เดือนที่แล้ว</option>
+        <option value="all">ทั้งหมด</option>
+      </select>
+      <button class="btn ghost" onclick="loadTrade(true)">↻ โหลดใหม่</button>
+      <button class="btn" onclick="exportDetail()">⬇ Export Excel</button>
+    </div>
+    <div class="stats" id="dtStats"></div>
+    <div class="grid2" style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="card">
+        <h3 style="margin:0 0 10px">สัดส่วน ตอบรับ / ไม่ตอบรับ (Trade-in)</h3>
+        <div id="dtPortion"></div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 10px">ลูกค้าไม่ Trade — ยังซื้อเครื่องกับเราไหม</h3>
+        <div id="dtBuyPortion"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3 style="margin:0 0 10px">รุ่นที่นิยมนำมา Trade (Top 10)</h3>
+      <div id="dtModels"></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3 style="margin:0 0 10px">รายการ Trade-in</h3>
+      <table>
+        <thead><tr><th>วันเวลา</th><th>สาขา</th><th>พนักงาน</th><th>ผล</th><th>รุ่น</th><th style="text-align:right">ราคา</th><th style="text-align:center">ซื้อเครื่อง</th></tr></thead>
+        <tbody id="dtTbody"></tbody>
+      </table>
+      <div class="empty" id="dtEmpty" style="display:none">ไม่พบข้อมูล</div>
+    </div>
+  </div>
+
+  <div id="priceView" class="hidden">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+      <select id="prPeriod" onchange="renderPrice()" style="max-width:220px">
+        <option value="today">วันนี้</option>
+        <option value="7">7 วันล่าสุด</option>
+        <option value="thisMonth">เดือนนี้</option>
+        <option value="lastMonth">เดือนที่แล้ว</option>
+        <option value="all" selected>ทั้งหมด</option>
+      </select>
+      <button class="btn ghost" onclick="loadTrade(true)">↻ โหลดใหม่</button>
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 12px">จัดอันดับราคาที่เสนอแต่ละรุ่น (เฉพาะรายการที่มีราคา) — เรียงตามราคาเฉลี่ยสูงสุด</p>
+    <div class="card">
+      <table>
+        <thead><tr><th>#</th><th>รุ่น</th><th style="text-align:center">จำนวนครั้ง</th><th style="text-align:right">ราคาเฉลี่ย</th><th style="text-align:right">ต่ำสุด</th><th style="text-align:right">สูงสุด</th><th style="text-align:right">ล่าสุด</th></tr></thead>
+        <tbody id="prTbody"></tbody>
+      </table>
+      <div class="empty" id="prEmpty" style="display:none">ไม่พบข้อมูลราคา</div>
+    </div>
+  </div>
+
+  <div id="compareView" class="hidden">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+      <label class="btn" style="cursor:pointer;background:var(--brand);color:#fff">
+        ⬆ Import ไฟล์ ROS
+        <input type="file" id="cmpFile" accept=".xlsx,.xls" style="display:none" onchange="onCmpFile(event)">
+      </label>
+      <div style="display:flex;align-items:center;gap:4px">
+        <button class="btn ghost" onclick="rosMonthStep(-1)" title="เดือนก่อนหน้า" style="padding:6px 10px">‹</button>
+        <select id="cmpMonth" onchange="rosMonthChanged()" style="min-width:150px"></select>
+        <button class="btn ghost" onclick="rosMonthStep(1)" title="เดือนถัดไป" style="padding:6px 10px">›</button>
+      </div>
+      <button class="btn ghost" onclick="loadRos(true)">↻ รีเฟรช</button>
+      <button class="btn ghost" onclick="toggleBatches()">📋 ไฟล์ที่ import</button>
+      <button class="btn ghost" onclick="rosFixDates()" title="แปลงคอลัมน์ DATE ที่ Google Sheets เปลี่ยนเป็นวันที่ กลับเป็นข้อความ">🛠 ซ่อมวันที่</button>
+      <button class="btn ghost" onclick="toggleModels()">📱 รุ่นที่กรอง</button>
+      <span style="flex:1"></span>
+      <div style="display:flex;gap:2px;background:rgba(255,255,255,.05);border-radius:6px;padding:2px">
+        <button class="btn ghost" id="cmpTabLoc" onclick="setCmpView('loc')" style="padding:6px 12px">By Location</button>
+        <button class="btn ghost" id="cmpTabUser" onclick="setCmpView('user')" style="padding:6px 12px">By User</button>
+      </div>
+      <button class="btn ghost" onclick="exportCompare()" title="ดาวน์โหลดเป็น Excel">⬇ Export</button>
+      <span id="cmpFileName" style="color:var(--muted);font-size:12px"></span>
+    </div>
+    <div id="cmpBatches" class="card hidden" style="margin-bottom:12px;padding:12px"></div>
+    <div id="cmpModels" class="card hidden" style="margin-bottom:12px;padding:12px"></div>
+    <div id="cmpHint" class="card" style="padding:16px;color:var(--muted);font-size:13px">
+      กำลังโหลดข้อมูลสะสม…
+    </div>
+    <div id="cmpResult"></div>
+  </div>
+
+  <div id="financingView" class="hidden">
+    <iframe id="finFrame" src="" style="width:100%;height:calc(100vh - 160px);min-height:600px;border:1px solid var(--line);border-radius:14px;background:var(--ink)"></iframe>
+  </div>
+
+  <div id="perfView" class="hidden">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+      <select id="pfPeriod" onchange="renderPerf()" style="max-width:200px">
+        <option value="today">วันนี้</option>
+        <option value="yesterday">เมื่อวาน</option>
+        <option value="7">7 วันล่าสุด</option>
+        <option value="14">14 วันล่าสุด</option>
+        <option value="thisMonth" selected>เดือนนี้</option>
+        <option value="lastMonth">เดือนที่แล้ว</option>
+        <option value="all">ทั้งหมด</option>
+      </select>
+      <select id="pfMgr" onchange="renderPerf()" style="max-width:180px">
+        <option value="exclude" selected>ไม่รวม Mgr/Sup</option>
+        <option value="all">รวม Mgr/Sup</option>
+        <option value="only">เฉพาะ Mgr/Sup</option>
+      </select>
+      <span id="pfMgrCount" class="sub" style="font-size:11px"></span>
+      <button class="btn ghost" onclick="loadTrade(true)">↻ โหลดใหม่</button>
+      <button class="btn" onclick="exportPerf()">⬇ Export Excel</button>
+    </div>
+
+    <div class="tabs" id="pfTypeTabs" style="margin-bottom:14px">
+      <button class="on" data-pt="ais" onclick="pfSwitchType('ais')">AIS Staff</button>
+      <button data-pt="pc" onclick="pfSwitchType('pc')">PC</button>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 12px">สรุปต่อสาขา <span class="sub" id="pfTypeLabel"></span></h3>
+      <table>
+        <thead><tr>
+          <th>สาขา</th>
+          <th style="text-align:center">พนักงาน</th>
+          <th style="text-align:center">มียอด</th>
+          <th style="text-align:center">ยังไม่มียอด</th>
+          <th style="text-align:center">% มียอด</th>
+        </tr></thead>
+        <tbody id="pfBranchBody"></tbody>
+      </table>
+      <div class="empty" id="pfBranchEmpty" style="display:none">ไม่พบข้อมูล</div>
+    </div>
+
+    <div class="stats" id="pfStats" style="margin-top:14px"></div>
+
+    <div class="card" style="margin-top:14px">
+      <h3 style="margin:0 0 10px">รายละเอียดราย User</h3>
+      <table>
+        <thead><tr id="pfDetailHead"></tr></thead>
+        <tbody id="pfTbody"></tbody>
+      </table>
+      <div class="empty" id="pfEmpty" style="display:none">ไม่พบข้อมูล</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="ov" id="ov">
+  <div class="modal">
+    <h3 id="mTitle">เพิ่มพนักงาน</h3>
+    <input type="hidden" id="f_id">
+    <div class="fld"><label>ชื่อ (Username/Name)</label><input id="f_name"></div>
+    <div class="row2">
+      <div class="fld"><label>PIN</label><input id="f_pin"></div>
+      <div class="fld" id="brandFld"><label>Brand</label><input id="f_brand"></div>
+    </div>
+    <div class="fld"><label>สาขา (Branch)</label><select id="f_branch"></select></div>
+    <div class="mfoot">
+      <button class="btn ghost" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn" onclick="saveStaff()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="imgOv" onclick="closeImg()">
+  <div class="imgmodal"><img id="imgBig" src=""></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+var ADMIN_URL   = 'https://script.google.com/macros/s/AKfycbxnFHnV6xFxZgl3JncF3VTf10Lmm6ewrEjADfcKRpKNIbpRzyYG0CWGIko9ZLmgNCdmDA/exec';
+var TRADEIN_URL = 'https://script.google.com/macros/s/AKfycbx8sSMqC7t-9w6M38vElZnEZ4IlxZ_Zf6-Rd_pDLx2IMxowqHptrNE-BfxPYbZ2CT-YVQ/exec';
+
+var BRANCHES = ['Shop Central Phuket Festival','Shop Central Phuket Floresta','Shop Central Surat Thani',
+  'Shop Central Samui','Shop Central Nakhon Si Thammarat','Shop Central Hat Yai',
+  'Shop Serenade Club Central Festival Hat Yai','Shop Hatyai Village','Shop Robinson Trang'];
+
+var curType='ais', curMain='staff';
+var DB={ais:[],pc:[]};
+var TRADE=[];
+
+function jsonp(base,params){
+  return new Promise(function(resolve,reject){
+    var cb='__cb'+Date.now()+Math.floor(Math.random()*1000);
+    var qs=Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
+    var s=document.createElement('script');
+    var to=setTimeout(function(){cleanup();reject({error:'timeout'});},15000);
+    function cleanup(){clearTimeout(to);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);}
+    window[cb]=function(res){cleanup();resolve(res);};
+    s.onerror=function(){cleanup();reject({error:'network'});};
+    s.src=base+'?'+qs+'&cb='+cb;
+    document.body.appendChild(s);
+  });
+}
+
+var ADMIN_PASS_CACHE='';
+function doLogin(){
+  var u=document.getElementById('luser').value.trim();
+  var p=document.getElementById('lpass').value;
+  var btn=document.getElementById('lbtn'); var err=document.getElementById('lerr');
+  err.textContent='';
+  if(!u||!p){ err.textContent='กรอก username และ password'; return; }
+  btn.disabled=true; btn.textContent='กำลังตรวจสอบ...';
+  jsonp(ADMIN_URL,{action:'login',user:u,pass:p}).then(function(res){
+    if(res&&res.ok){
+      sessionStorage.setItem('adminAuth','1'); sessionStorage.setItem('adminUser',u);
+      ADMIN_PASS_CACHE=p;
+      enterApp(u);
+    } else { err.textContent='username หรือ password ไม่ถูกต้อง'; btn.disabled=false; btn.textContent='เข้าสู่ระบบ'; }
+  }).catch(function(){ err.textContent='เชื่อมต่อไม่ได้ ลองใหม่'; btn.disabled=false; btn.textContent='เข้าสู่ระบบ'; });
+}
+function enterApp(u){
+  document.getElementById('loginGate').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('whoami').textContent=u;
+  var sel=document.getElementById('f_branch');
+  sel.innerHTML='<option value="">— เลือกสาขา —</option>';
+  BRANCHES.forEach(function(b){ sel.innerHTML+='<option>'+b+'</option>'; });
+  loadStaff();
+}
+function logout(){ sessionStorage.removeItem('adminAuth'); sessionStorage.removeItem('adminUser'); location.reload(); }
+
+function mainTab(m){
+  curMain=m;
+  document.querySelectorAll('.tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.main===m);});
+  document.getElementById('staffView').classList.toggle('hidden',m!=='staff');
+  document.getElementById('tradeView').classList.toggle('hidden',m!=='trade');
+  document.getElementById('optionsView').classList.toggle('hidden',m!=='options');
+  document.getElementById('dashView').classList.toggle('hidden',m!=='dash');
+  document.getElementById('detailView').classList.toggle('hidden',m!=='detail');
+  document.getElementById('perfView').classList.toggle('hidden',m!=='perf');
+  document.getElementById('priceView').classList.toggle('hidden',m!=='price');
+  document.getElementById('compareView').classList.toggle('hidden',m!=='compare');
+  document.getElementById('financingView').classList.toggle('hidden',m!=='financing');
+  if(m==='financing'){ var fr=document.getElementById('finFrame'); if(!fr.src||fr.src===location.href){ fr.src='Financing.html'; } }
+  if(m==='trade' && !TRADE.length) loadTrade();
+  if(m==='options') loadOptions();
+  if(m==='dash') renderDash();
+  if(m==='detail'){ if(!TRADE.length)loadTrade(); else renderDetail(); }
+  if(m==='price'){ if(!TRADE.length)loadTrade(); else renderPrice(); }
+  if(m==='perf'){ if(!TRADE.length)loadTrade(); else renderPerf(); }
+  if(m==='compare'){ STAFF_NAME_MAP=null; setCmpViewBtns(); if(!TRADE.length)loadTrade(); if(!DB.ais.length&&!DB.pc.length)loadStaff(); if(!MGRSUP.length)loadMgrSup(); if(!PRO_ROSTER.length)loadProRoster(); loadModels(); loadRos(); }
+}
+
+/* ============ DASHBOARD: staff count by branch ============ */
+var DASH_CELLS={}; // cellId -> [{name,picture,role}]
+function renderDash(){
+  var ais=(DB.ais||[]).filter(function(r){return !r.deleted && r.active;});
+  var pc=(DB.pc||[]).filter(function(r){return !r.deleted && r.active;});
+  DASH_CELLS={};
+  var branches={};
+  function ensure(b){ b=b||'(ไม่ระบุสาขา)'; if(!branches[b])branches[b]={branch:b,ais:0,apple:0,samsung:0,pc:0,
+    aisList:[],appleList:[],samsungList:[],pcList:[]}; return branches[b]; }
+  ais.forEach(function(r){
+    var b=ensure(r.branch); b.ais++;
+    var pro=proOf(r.name,r.pin);
+    var person={name:r.name,picture:r.picture||'',role:pro?('AIS Pro '+pro):'AIS Staff'};
+    b.aisList.push(person);
+    if(/apple/i.test(pro))b.appleList.push(person);
+    else if(/sam|sas/i.test(pro))b.samsungList.push(person);
+    if(/apple/i.test(pro))b.apple++;
+    else if(/sam|sas/i.test(pro))b.samsung++;
+  });
+  pc.forEach(function(r){ var b=ensure(r.branch); b.pc++; b.pcList.push({name:r.name,picture:r.picture||'',role:'PC'+(r.brand?' '+r.brand:'')}); });
+  var rows=Object.values(branches).sort(function(a,b){return a.branch.localeCompare(b.branch);});
+  var T={ais:0,apple:0,samsung:0,pc:0,total:0};
+  rows.forEach(function(x){T.ais+=x.ais;T.apple+=x.apple;T.samsung+=x.samsung;T.pc+=x.pc;});
+  T.total=T.ais+T.pc;
+  document.getElementById('dashTotals').innerHTML=
+    stat(T.total,'พนักงานทั้งหมด')+stat(T.ais,'AIS Staff')+
+    stat(T.apple,'Pro Apple')+stat(T.samsung,'Pro Samsung')+stat(T.pc,'PC');
+  var tb=document.getElementById('dashTbody'); tb.innerHTML='';
+  document.getElementById('dashEmpty').style.display=rows.length?'none':'block';
+  var cid=0;
+  function cell(list,val,extra){
+    if(!list||!list.length) return '<td style="text-align:center'+(extra||'')+'">'+(val||'—')+'</td>';
+    var id='dc'+(cid++); DASH_CELLS[id]=list;
+    return '<td class="dashCell" style="text-align:center;cursor:pointer'+(extra||'')+'" '+
+      'onmouseenter="showDashPop(event,\''+id+'\')" onmouseleave="hideDashPop()">'+val+'</td>';
+  }
+  rows.forEach(function(x){
+    var total=x.ais+x.pc;
+    var allList=x.aisList.concat(x.pcList);
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td style="font-weight:600">'+esc(x.branch)+'</td>'+
+      cell(allList,'<b>'+total+'</b>')+
+      cell(x.aisList,x.ais)+
+      cell(x.appleList,x.apple||'—',';color:#f5a623')+
+      cell(x.samsungList,x.samsung||'—',';color:#f5a623')+
+      cell(x.pcList,x.pc||'—');
+    tb.appendChild(tr);
+  });
+}
+var _dashHideT=null;
+function showDashPop(ev,id){
+  var list=DASH_CELLS[id]; if(!list||!list.length)return;
+  if(_dashHideT){clearTimeout(_dashHideT);_dashHideT=null;}
+  var pop=document.getElementById('dashPop');
+  if(!pop){
+    pop=document.createElement('div'); pop.id='dashPop'; document.body.appendChild(pop);
+    pop.addEventListener('mouseenter',function(){ if(_dashHideT){clearTimeout(_dashHideT);_dashHideT=null;} });
+    pop.addEventListener('mouseleave',hideDashPop);
+  }
+  pop.innerHTML='<div class="dpHead">'+list.length+' คน</div>'+list.map(function(p){
+    var pic=p.picture?'<img src="'+p.picture+'">':'<span class="noimg">'+esc((p.name||'?').charAt(0))+'</span>';
+    return '<div class="dpRow">'+pic+'<div><div class="dpNm">'+esc(p.name)+'</div><div class="dpRole">'+esc(p.role)+'</div></div></div>';
+  }).join('');
+  pop.style.display='block';
+  var r=ev.target.getBoundingClientRect();
+  var top=r.bottom+window.scrollY+6, left=r.left+window.scrollX-60;
+  if(left<8)left=8;
+  var vw=window.innerWidth;
+  if(left+240>vw)left=vw-248;
+  pop.style.top=top+'px'; pop.style.left=left+'px';
+}
+function hideDashPop(){
+  if(_dashHideT)clearTimeout(_dashHideT);
+  _dashHideT=setTimeout(function(){
+    var pop=document.getElementById('dashPop'); if(pop)pop.style.display='none';
+  },220); // หน่วงให้เลื่อนเมาส์เข้า popover ทัน
+}
+
+/* ============ period filter (shared by Detail/Price) ============ */
+function inPeriodV(tsStr,v){
+  if(v==='all')return true;
+  var d=parseTs(tsStr); if(!d)return false;
+  var now=new Date();
+  var t0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var dd=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  if(v==='today')return dd.getTime()===t0.getTime();
+  if(v==='yesterday'){ var y=new Date(t0);y.setDate(y.getDate()-1);return dd.getTime()===y.getTime(); }
+  if(v==='7'){ var s7=new Date(t0);s7.setDate(s7.getDate()-6);return dd>=s7&&dd<=t0; }
+  if(v==='14'){ var s14=new Date(t0);s14.setDate(s14.getDate()-13);return dd>=s14&&dd<=t0; }
+  if(v==='thisMonth')return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
+  if(v==='lastMonth'){ var lm=new Date(now.getFullYear(),now.getMonth()-1,1);return d.getFullYear()===lm.getFullYear()&&d.getMonth()===lm.getMonth(); }
+  return true;
+}
+function priceNum(s){ var n=parseFloat(String(s||'').replace(/[^0-9.]/g,'')); return isNaN(n)?null:n; }
+
+/* ============ DETAIL: portion + popular models + list ============ */
+function renderDetail(){
+  var v=document.getElementById('dtPeriod').value;
+  var list=TRADE.filter(function(r){return inPeriodV(r.ts,v);});
+  var accN=list.filter(function(r){return r.accept==='ตอบรับ';}).length;
+  var rejN=list.length-accN;
+  var rate=list.length?Math.round(100*accN/list.length):0;
+  document.getElementById('dtStats').innerHTML=
+    stat(list.length,'ทั้งหมด')+stat(accN,'ตอบรับ')+stat(rejN,'ไม่ตอบรับ')+stat(rate+'%','%ATR');
+  // portion bar
+  var accPct=list.length?100*accN/list.length:0;
+  document.getElementById('dtPortion').innerHTML=
+    '<div style="display:flex;height:32px;border-radius:8px;overflow:hidden;background:#161b22">'+
+      (accN?'<div style="width:'+accPct+'%;background:#8DC63F;display:flex;align-items:center;justify-content:center;color:#0a2a12;font-weight:700;font-size:12px">'+accN+'</div>':'')+
+      (rejN?'<div style="width:'+(100-accPct)+'%;background:#e5484d;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px">'+rejN+'</div>':'')+
+    '</div>'+
+    '<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px">'+
+      '<span style="color:#8DC63F">● ตอบรับ '+accN+' ('+Math.round(accPct)+'%)</span>'+
+      '<span style="color:#e5484d">● ไม่ตอบรับ '+rejN+' ('+(100-Math.round(accPct))+'%)</span>'+
+    '</div>';
+  // buy portion: เฉพาะกลุ่ม "ไม่ตอบรับ Trade" — ยังซื้อเครื่องกับเราไหม
+  var noAccList=list.filter(function(r){return r.accept!=='ตอบรับ';});
+  var buyY=noAccList.filter(function(r){return String(r.buy||'').indexOf('ซื้อ')===0;}).length;
+  var buyN=noAccList.filter(function(r){return String(r.buy||'').indexOf('ไม่ซื้อ')===0;}).length;
+  var buyTot=buyY+buyN;
+  var buyPct=buyTot?100*buyY/buyTot:0;
+  document.getElementById('dtBuyPortion').innerHTML=
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">จากลูกค้าที่ <b style="color:#e5484d">ไม่ตอบรับ Trade</b> '+noAccList.length+' ราย (ระบุการซื้อ '+buyTot+' ราย)</div>'+
+    '<div style="display:flex;height:32px;border-radius:8px;overflow:hidden;background:#161b22">'+
+      (buyY?'<div style="width:'+buyPct+'%;background:#3d8bff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px">'+buyY+'</div>':'')+
+      (buyN?'<div style="width:'+(100-buyPct)+'%;background:#8b949e;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px">'+buyN+'</div>':'')+
+    '</div>'+
+    '<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px">'+
+      '<span style="color:#3d8bff">● ยังซื้อ '+buyY+' ('+Math.round(buyPct)+'%)</span>'+
+      '<span style="color:#8b949e">● ไม่ซื้อ '+buyN+' ('+(buyTot?100-Math.round(buyPct):0)+'%)</span>'+
+    '</div>';
+  // popular models
+  var mm={};
+  list.forEach(function(r){ var m=String(r.model||'').trim(); if(m){mm[m]=(mm[m]||0)+1;} });
+  var mrows=Object.keys(mm).map(function(k){return {model:k,n:mm[k]};}).sort(function(a,b){return b.n-a.n;}).slice(0,10);
+  var maxN=mrows.length?mrows[0].n:1;
+  document.getElementById('dtModels').innerHTML=mrows.length?mrows.map(function(x,i){
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'+
+      '<div style="width:18px;flex:0 0 18px;font-size:11px;color:var(--muted);text-align:right">'+(i+1)+'.</div>'+
+      '<div style="width:130px;flex:0 0 130px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(x.model)+'">'+esc(x.model)+'</div>'+
+      '<div style="flex:1;height:18px;background:#161b22;border-radius:4px;overflow:hidden;position:relative">'+
+        '<div style="width:'+(100*x.n/maxN)+'%;height:100%;background:#8DC63F"></div>'+
+      '</div>'+
+      '<div style="width:56px;flex:0 0 56px;text-align:right;font-weight:700;font-size:13px;color:#8DC63F">'+x.n+' <span style="font-size:11px;color:var(--muted);font-weight:400">ครั้ง</span></div>'+
+    '</div>';
+  }).join(''):'<div class="sub">ไม่มีข้อมูลรุ่น</div>';
+  // list table
+  var tb=document.getElementById('dtTbody'); tb.innerHTML='';
+  var sorted=list.slice().sort(function(a,b){return (b.ts||'').localeCompare(a.ts||'');});
+  document.getElementById('dtEmpty').style.display=sorted.length?'none':'block';
+  sorted.slice(0,300).forEach(function(r){
+    var acc=r.accept==='ตอบรับ';
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><span class="sub">'+esc(r.ts||'')+'</span></td>'+
+      '<td>'+esc(r.branch||'')+'</td>'+
+      '<td>'+esc(r.name||'')+'</td>'+
+      '<td><span class="pill '+(acc?'acc':'noacc')+'">'+esc(r.accept||'')+'</span></td>'+
+      '<td>'+esc(r.model||'—')+'</td>'+
+      '<td style="text-align:right">'+(priceNum(r.price)!=null?priceNum(r.price).toLocaleString('en-US'):'—')+'</td>'+
+      '<td style="text-align:center">'+(r.buy?('<span class="pill '+(String(r.buy).indexOf('ไม่')===0?'noacc':'acc')+'">'+esc(r.buy)+'</span>'):'—')+'</td>';
+    tb.appendChild(tr);
+  });
+}
+
+function exportDetail(){
+  if(typeof XLSX==='undefined'){ toast('กำลังโหลดตัวช่วย Export ลองอีกครั้ง','err'); return; }
+  var v=document.getElementById('dtPeriod').value;
+  var list=TRADE.filter(function(r){return inPeriodV(r.ts,v);})
+    .sort(function(a,b){return (b.ts||'').localeCompare(a.ts||'');});
+  if(!list.length){ toast('ไม่มีข้อมูลในช่วงนี้','err'); return; }
+  var rows=[['วันเวลา','สาขา','พนักงาน','Type','AIS Pro','ผล','รุ่นที่ Trade','ราคาที่เสนอ','ซื้อเครื่องใหม่','สาเหตุไม่ตอบรับ','สาเหตุไม่เทรด','ร้าน/ราคาคู่แข่ง','หมายเหตุ']];
+  list.forEach(function(r){
+    rows.push([r.ts||'',r.branch||'',r.name||'',r.type||'',r.aisPro||'',r.accept||'',r.model||'',
+      priceNum(r.price)!=null?priceNum(r.price):'',r.buy||'',r.reasonNoAcc||'',r.reasonNoTrade||'',r.shopPrice||'',r.other||'']);
+  });
+  var ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:18},{wch:26},{wch:18},{wch:6},{wch:12},{wch:10},{wch:20},{wch:12},{wch:12},{wch:20},{wch:20},{wch:20},{wch:24}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Detail');
+  var d=new Date(),pad=function(n){return(n<10?'0':'')+n;};
+  XLSX.writeFile(wb,'TradeIn_Detail_'+v+'_'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'.xlsx');
+}
+
+/* ============ PRICE RANKING ============ */
+function renderPrice(){
+  var v=document.getElementById('prPeriod').value;
+  var list=TRADE.filter(function(r){return inPeriodV(r.ts,v);});
+  var mm={};
+  list.forEach(function(r){
+    var m=String(r.model||'').trim(); var p=priceNum(r.price);
+    if(!m||p==null||p<=0)return;
+    if(!mm[m])mm[m]={model:m,prices:[],last:null,lastTs:''};
+    mm[m].prices.push(p);
+    if((r.ts||'')>=mm[m].lastTs){mm[m].lastTs=r.ts||'';mm[m].last=p;}
+  });
+  var rows=Object.keys(mm).map(function(k){
+    var x=mm[k],sum=0,min=x.prices[0],max=x.prices[0];
+    x.prices.forEach(function(p){sum+=p;if(p<min)min=p;if(p>max)max=p;});
+    return {model:x.model,n:x.prices.length,avg:Math.round(sum/x.prices.length),min:min,max:max,last:x.last};
+  }).sort(function(a,b){return b.avg-a.avg;});
+  var tb=document.getElementById('prTbody'); tb.innerHTML='';
+  document.getElementById('prEmpty').style.display=rows.length?'none':'block';
+  var f=function(n){return n.toLocaleString('en-US');};
+  rows.forEach(function(x,i){
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td class="sub">'+(i+1)+'</td>'+
+      '<td style="font-weight:600">'+esc(x.model)+'</td>'+
+      '<td style="text-align:center">'+x.n+'</td>'+
+      '<td style="text-align:right;font-weight:700;color:#8DC63F">'+f(x.avg)+'</td>'+
+      '<td style="text-align:right;color:var(--muted)">'+f(x.min)+'</td>'+
+      '<td style="text-align:right;color:var(--muted)">'+f(x.max)+'</td>'+
+      '<td style="text-align:right">'+f(x.last)+'</td>';
+    tb.appendChild(tr);
+  });
+}
+
+/* ============ STAFF PERFORMANCE (who has/hasn't got yields) ============ */
+var PF_TYPE='ais'; // ais | pc
+function pfSwitchType(t){
+  PF_TYPE=t;
+  document.querySelectorAll('#pfTypeTabs button').forEach(function(b){b.classList.toggle('on',b.dataset.pt===t);});
+  renderPerf();
+}
+function buildPerfRows(){
+  var pv=document.getElementById('pfPeriod').value;
+  var tv=PF_TYPE;
+  // ยอด Trade-in ตาม period จับตามชื่อ (normalize)
+  var yields={};
+  TRADE.filter(function(r){return inPeriodV(r.ts,pv);}).forEach(function(r){
+    var nm=String(r.name||'').replace(/\s+/g,' ').trim().toUpperCase();
+    if(!nm)return;
+    if(!yields[nm])yields[nm]={t:0,a:0};
+    yields[nm].t++; if(r.accept==='ตอบรับ')yields[nm].a++;
+  });
+  // roster พนักงาน active - นับ Mgr/Sup ด้วย แต่ติดธง
+  var roster=[];
+  if(tv==='ais'){
+    (DB.ais||[]).filter(function(r){return !r.deleted && r.active;}).forEach(function(r){
+      roster.push({name:r.name,pin:r.pin,branch:r.branch||'',type:'AIS',pro:proOf(r.name,r.pin),mgrSup:isMgrSup(r.name,r.pin)});
+    });
+  }else{
+    (DB.pc||[]).filter(function(r){return !r.deleted && r.active;}).forEach(function(r){
+      roster.push({name:r.name,pin:r.pin,branch:r.branch||'',type:'PC',pro:'',brand:r.brand||'',mgrSup:isMgrSup(r.name,r.pin)});
+    });
+  }
+  // filter Mgr/Sup ตามตัวเลือก
+  var mv=document.getElementById('pfMgr')?document.getElementById('pfMgr').value:'exclude';
+  if(mv==='exclude')roster=roster.filter(function(u){return !u.mgrSup;});
+  else if(mv==='only')roster=roster.filter(function(u){return u.mgrSup;});
+  // ผูกยอด
+  roster.forEach(function(u){
+    var nm=String(u.name||'').replace(/\s+/g,' ').trim().toUpperCase();
+    var y=yields[nm]||{t:0,a:0};
+    u.total=y.t; u.acc=y.a; u.rej=y.t-y.a; u.rate=y.t?100*y.a/y.t:0; u.hasYield=y.t>0;
+  });
+  return roster;
+}
+
+/* ============ ROS Sale Dashboard (สะสมข้อมูล + เทียบ Trade-in) ============ */
+// รุ่นที่กรอง (คอลัมน์ MODEL) — แก้ได้จากปุ่ม "รุ่นที่กรอง" เก็บไว้ที่ server
+var CMP_MODELS=['IP17_256GB','IP17_512GB','IP17E_256GB','IP17P_256GB','IP17P_512GB','IP17PM_1TB','IP17PM_256GB','IP17PM_512GB'];
+var CMP_MODEL_SET={};
+function cmpRebuildModelSet(){
+  CMP_MODEL_SET={};
+  CMP_MODELS.forEach(function(m){ CMP_MODEL_SET[String(m).replace(/\s+/g,'').toUpperCase()]=1; });
+}
+cmpRebuildModelSet();
+function cmpIsTargetModel(v){ return !!CMP_MODEL_SET[String(v||'').replace(/\s+/g,'').toUpperCase()]; }
+
+// ---------- จัดการรุ่นที่กรอง ----------
+function loadModels(cb){
+  jsonp(ADMIN_URL,{action:'rosModels'}).then(function(j){
+    if(j.ok&&j.models&&j.models.length){ CMP_MODELS=j.models; cmpRebuildModelSet(); }
+    if(cb)cb();
+  }).catch(function(){ if(cb)cb(); });
+}
+function toggleModels(){
+  var el=document.getElementById('cmpModels');
+  el.classList.toggle('hidden');
+  if(el.classList.contains('hidden'))return;
+  renderModelsPanel();
+}
+function renderModelsPanel(){
+  var el=document.getElementById('cmpModels');
+  el.innerHTML='<div style="font-size:13px;color:var(--muted);margin-bottom:8px">'+
+      'รุ่นที่นับเป็น Total Sales (คอลัมน์ MODEL ในไฟล์ ROS) — พิมพ์รุ่นละบรรทัด แล้วกดบันทึก'+
+    '</div>'+
+    '<textarea id="mdList" style="width:100%;min-height:150px;font-family:monospace;font-size:13px;padding:8px;'+
+      'background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:6px;color:inherit">'+
+      esc(CMP_MODELS.join('\n'))+'</textarea>'+
+    '<div style="display:flex;gap:8px;margin-top:8px;align-items:center">'+
+      '<button class="btn" style="background:var(--brand);color:#fff" onclick="saveModels()">บันทึก</button>'+
+      '<button class="btn ghost" onclick="renderModelsPanel()">ยกเลิก</button>'+
+      '<span style="font-size:12px;color:var(--muted)">ตอนนี้ '+CMP_MODELS.length+' รุ่น · บันทึกแล้วต้อง import ไฟล์ใหม่อีกครั้ง เพื่อให้ยอดตรงตามรุ่นใหม่</span>'+
+    '</div>';
+}
+function saveModels(){
+  var raw=document.getElementById('mdList').value||'';
+  var list=raw.split(/[\r\n,]+/).map(function(x){return x.replace(/\s+/g,'').toUpperCase();}).filter(Boolean);
+  if(!list.length){ toast('ต้องมีอย่างน้อย 1 รุ่น','err'); return; }
+  jsonp(ADMIN_URL,{action:'rosSetModels',models:JSON.stringify(list)}).then(function(j){
+    if(!j.ok){ toast('บันทึกไม่สำเร็จ: '+(j.error||''),'err'); return; }
+    CMP_MODELS=j.models; cmpRebuildModelSet(); renderModelsPanel();
+    toast('บันทึก '+j.models.length+' รุ่นแล้ว','ok');
+    renderCompare(); // อัปเดตแถบเตือนให้ import ใหม่
+  }).catch(function(e){ toast('บันทึกไม่สำเร็จ: '+(e.error||e.message||e),'err'); });
+}
+
+// เช็คว่าข้อมูลที่เก็บไว้ ถูก import ด้วยรุ่นชุดปัจจุบันหรือยัง
+function modelsStale(){
+  if(!ROS_SUM_VIEW||!ROS_SUM_VIEW.modelsUsed)return false;
+  var used=ROS_SUM_VIEW.modelsUsed.slice().sort().join(',');
+  var now=CMP_MODELS.slice().sort().join(',');
+  return used!==now;
+}
+
+// mapping ชื่อสาขา -> ตรงกับหน้า Trade-in Dashboard (ใช้จับคู่ฝั่ง Trade-in)
+var CMP_LOC_MAP={
+  'Shop Central Hat Yai':['เซ็นทรัลหาดใหญ่','central hat yai','central hatyai'],
+  'Shop Central Nakhon Si Thammarat':['เซ็นทรัลนครศรีธรรมราช','central nakhon si thammarat','นครศรีธรรมราช'],
+  'Shop Central Phuket Festival':['เซ็นทรัลภูเก็ต','central phuket festival','central phuket'],
+  'Shop Central Phuket Floresta':['ภูเก็ต ฟลอเรสต้า','ภูเก็ตฟลอเรสต้า','central phuket floresta','floresta'],
+  'Shop Central Samui':['เซ็นทรัลสมุย','central samui','สมุย'],
+  'Shop Central Surat Thani':['เซ็นทรัลสุราษฎร์ธานี','central surat thani','สุราษฎร์ธานี','สุราษฎร์'],
+  'Shop Hatyai Village':['หาดใหญ่วิลเลจ','hatyai village','hat yai village'],
+  'Shop Serenade Club Central Festival Hat Yai':['เซเรเนด หาดใหญ่','เซเรเนดหาดใหญ่','serenade','serenade club'],
+  'Shop Robinson Trang':['โรบินสันตรัง','robinson trang','ตรัง','trang'],
+  'Shop Airport Phuket (INTER)':['airport phuket','สนามบินภูเก็ต','airport']
+};
+var CMP_LOOKUP={};
+function cmpNormKey(s){return String(s||'').replace(/\s+/g,'').trim().toLowerCase();}
+(function(){ for(var std in CMP_LOC_MAP){ CMP_LOOKUP[cmpNormKey(std)]=std; CMP_LOC_MAP[std].forEach(function(a){CMP_LOOKUP[cmpNormKey(a)]=std;}); } })();
+function cmpMapLoc(raw){
+  var k=cmpNormKey(raw);
+  if(CMP_LOOKUP[k])return CMP_LOOKUP[k];
+  for(var key in CMP_LOOKUP){ if(k&&(k.indexOf(key)>=0||key.indexOf(k)>=0))return CMP_LOOKUP[key]; }
+  return raw||'(ไม่ระบุสาขา)';
+}
+
+var ROS_SUM_VIEW=null; // summary ของเดือนที่เลือก
+var ROS_MONTH='';      // 'yyyy-MM' เดือนที่กำลังดู
+var ROS_MONTHS=[];     // เดือนทั้งหมดที่มีข้อมูล
+var ROS_BATCHES=null;  // [{src,rows,uploadedAt,minD,maxD}]
+
+// ---------- Import ----------
+function onCmpFile(ev){
+  var f=ev.target.files&&ev.target.files[0];
+  if(!f)return;
+  var nameEl=document.getElementById('cmpFileName');
+  nameEl.textContent='กำลังอ่าน '+f.name+' …';
+  if(typeof XLSX==='undefined'){ toast('ตัวช่วยอ่าน Excel ยังไม่พร้อม ลองใหม่','err'); return; }
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      var sheetName=wb.SheetNames.filter(function(n){return String(n).replace(/\s+/g,'').toLowerCase()==='data_sale';})[0];
+      if(!sheetName){ toast('ไม่พบชีต Data_Sale ในไฟล์นี้','err'); nameEl.textContent=''; return; }
+      var rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,defval:''});
+      var parsed=parseRosRows(rows);
+      if(!parsed.rows.length){ toast('ไม่พบข้อมูลที่ตรงเงื่อนไข (DEVICE + รุ่นที่กำหนด)','err'); nameEl.textContent=''; return; }
+      nameEl.textContent='กำลังอัปโหลด '+parsed.rows.length+' แถว …';
+      uploadRos(parsed.rows,f.name,parsed.info);
+    }catch(err){ toast('อ่านไฟล์ไม่ได้: '+(err.message||err),'err'); nameEl.textContent=''; }
+  };
+  reader.readAsArrayBuffer(f);
+  ev.target.value='';
+}
+
+// แปลงวันที่ -> yyyy-MM-dd (รองรับ dd/mm/yyyy และ Excel serial)
+function rosDate(v){
+  if(v==null||v==='')return '';
+  if(v instanceof Date)return isNaN(v)?'':ymdLocal(v);
+  if(typeof v==='number'){ // Excel serial (นับจาก 1899-12-30 แบบ UTC)
+    var dt=new Date(Math.round((v-25569)*86400*1000));
+    return dt.toISOString().slice(0,10);
+  }
+  var s=String(v).trim();
+  var m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m){ var y=+m[3]; if(y>2400)y-=543; return y+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2); }
+  var m2=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m2)return m2[0];
+  return s;
+}
+
+// อ่าน Data_Sale -> rows [[date,ptype,model,locCode,locName,qty]]
+function parseRosRows(rows){
+  if(!rows||!rows.length)return{rows:[],info:'ไฟล์ว่าง'};
+  var want={'RECPT/INV DATE':-1,'PRODUCT TYPE':-1,'MODEL':-1,'LOCATION CODE':-1,'LOCATION NAME':-1,'QTY':-1,'SALE_EMPLOYEE_ID':-1,'SALE EMPLOYEE CODE':-1,'COLUMN1':-1};
+  var headerIdx=-1;
+  for(var i=0;i<Math.min(rows.length,15);i++){
+    var row=rows[i]; if(!row)continue;
+    var found={},cnt=0;
+    for(var c=0;c<row.length;c++){
+      var cell=String(row[c]||'').replace(/\s+/g,' ').trim().toUpperCase();
+      if(want.hasOwnProperty(cell)&&found[cell]===undefined){ found[cell]=c; cnt++; }
+    }
+    if(found['MODEL']!==undefined&&found['LOCATION NAME']!==undefined){
+      headerIdx=i; for(var k in found)want[k]=found[k]; break;
+    }
+  }
+  if(headerIdx<0)return{rows:[],info:'ไม่พบหัวตาราง (MODEL / LOCATION NAME)'};
+  // คอลัมน์ user: ใช้ SALE_EMPLOYEE_ID ก่อน, ไม่มีก็ Column1, ไม่มีอีกก็ตำแหน่ง L (index 11)
+  var userCol=want['SALE_EMPLOYEE_ID']>=0?want['SALE_EMPLOYEE_ID']:(want['COLUMN1']>=0?want['COLUMN1']:11);
+  // คอลัมน์ PIN: SALE EMPLOYEE CODE (ตัวเลข) ไว้ fallback ตอน username ไม่ตรงทะเบียน
+  var pinCol=want['SALE EMPLOYEE CODE']>=0?want['SALE EMPLOYEE CODE']:7;
+  var out=[],skipType=0,skipModel=0,noUser=0;
+  for(var r=headerIdx+1;r<rows.length;r++){
+    var v=rows[r]; if(!v)continue;
+    var model=String(v[want['MODEL']]||'').trim();
+    if(!model)continue;
+    var ptype=want['PRODUCT TYPE']>=0?String(v[want['PRODUCT TYPE']]||'').trim():'DEVICE';
+    if(ptype.toUpperCase()!=='DEVICE'){ skipType++; continue; }
+    if(!cmpIsTargetModel(model)){ skipModel++; continue; }
+    var d=rosDate(v[want['RECPT/INV DATE']]);
+    var code=String(v[want['LOCATION CODE']]||'').trim();
+    var name=String(v[want['LOCATION NAME']]||'').replace(/\s+/g,' ').trim();
+    var qty=want['QTY']>=0?(Number(v[want['QTY']])||1):1;
+    var user=String(v[userCol]||'').replace(/\s+/g,'').toLowerCase();
+    var pin=String(v[pinCol]||'').replace(/\s+/g,'').trim();
+    if(!user)noUser++;
+    out.push([d,ptype.toUpperCase(),model.toUpperCase(),code,name,qty,user,pin]);
+  }
+  return {rows:out,info:'เข้าเงื่อนไข '+out.length+' แถว · ข้าม (ไม่ใช่ DEVICE) '+skipType+' · ข้าม (นอกรุ่น) '+skipModel+(noUser?(' · ไม่มี user '+noUser):'')};
+}
+
+function uploadRos(rows,src,info){
+  fetch(ADMIN_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({action:'rosUpload',rows:rows,src:src})})
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(!j.ok){ toast('อัปโหลดไม่สำเร็จ: '+(j.error||''),'err'); document.getElementById('cmpFileName').textContent=''; return; }
+      document.getElementById('cmpFileName').textContent=src+' · '+info;
+      toast('เพิ่ม '+j.inserted+' แถว (แทนที่ของเดิม '+j.removed+') · '+j.dates.length+' วัน','ok');
+      loadRos(true);
+    })
+    .catch(function(e){ toast('อัปโหลดไม่สำเร็จ: '+e.message,'err'); document.getElementById('cmpFileName').textContent=''; });
+}
+
+// ---------- Load ----------
+function loadRos(force){
+  var hint=document.getElementById('cmpHint');
+  hint.textContent='กำลังโหลดข้อมูลสะสม…';
+  hint.classList.remove('hidden');
+  var m=ROS_MONTH||'';
+  jsonp(ADMIN_URL,{action:'rosSummary',month:m}).then(function(j){
+    if(!j.ok){ hint.textContent='โหลดไม่สำเร็จ: '+(j.error||''); return; }
+    ROS_MONTHS=j.months||[];
+    // ครั้งแรก: ถ้ายังไม่ได้เลือกเดือน -> ใช้เดือนล่าสุดที่มีข้อมูล แล้วโหลดซ้ำเฉพาะเดือนนั้น
+    if(!ROS_MONTH&&ROS_MONTHS.length){
+      ROS_MONTH=ROS_MONTHS[ROS_MONTHS.length-1];
+      fillMonthSelect();
+      loadRos(true);
+      return;
+    }
+    ROS_SUM_VIEW=j; fillMonthSelect();
+    if(!TRADE.length)loadTrade(); else renderCompare();
+  }).catch(function(e){ hint.textContent='โหลดไม่สำเร็จ: '+(e.error||e.message||e); });
+  jsonp(ADMIN_URL,{action:'rosBatches'}).then(function(j){ if(j.ok)ROS_BATCHES=j.batches||[]; }).catch(function(){});
+}
+
+// เปลี่ยนเดือน -> ขอ summary ใหม่ (ทั้ง 2 ฝั่งจะใช้เดือนเดียวกันเสมอ)
+function rosMonthChanged(){
+  ROS_MONTH=document.getElementById('cmpMonth').value;
+  var hint=document.getElementById('cmpHint');
+  hint.textContent='กำลังคำนวณ…'; hint.classList.remove('hidden');
+  jsonp(ADMIN_URL,{action:'rosSummary',month:ROS_MONTH}).then(function(j){
+    if(!j.ok){ hint.textContent='โหลดไม่สำเร็จ: '+(j.error||''); return; }
+    ROS_SUM_VIEW=j; if(j.months&&j.months.length)ROS_MONTHS=j.months;
+    fillMonthSelect(); renderCompare();
+  }).catch(function(e){ hint.textContent='โหลดไม่สำเร็จ: '+(e.error||e.message||e); });
+}
+
+// เลื่อนเดือน ‹ ›
+function rosMonthStep(step){
+  if(!ROS_MONTHS.length)return;
+  var i=ROS_MONTHS.indexOf(ROS_MONTH);
+  if(i<0)i=ROS_MONTHS.length-1;
+  var n=i+step;
+  if(n<0||n>=ROS_MONTHS.length)return;
+  ROS_MONTH=ROS_MONTHS[n];
+  document.getElementById('cmpMonth').value=ROS_MONTH;
+  rosMonthChanged();
+}
+
+var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+// '2026-07-15' -> '15 ก.ค.'
+function thDay(d){
+  var m=String(d||'').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(!m)return String(d||'');
+  return (+m[3])+' '+(TH_MON[(+m[2])-1]||m[2]);
+}
+function monthLabel(m){
+  var s=String(m||'');
+  var mm=s.match(/^(\d{4})-(\d{2})/);
+  if(!mm)return s;
+  var i=(+mm[2])-1;
+  return (TH_MON[i]||mm[2])+' '+mm[1];
+}
+
+function fillMonthSelect(){
+  var s=document.getElementById('cmpMonth');
+  s.innerHTML=ROS_MONTHS.map(function(m){return '<option value="'+m+'">'+monthLabel(m)+'</option>';}).join('');
+  if(ROS_MONTH)s.value=ROS_MONTH;
+  // ปิดปุ่มลูกศรเมื่อสุดทาง
+  var i=ROS_MONTHS.indexOf(ROS_MONTH);
+  var btns=s.parentNode.querySelectorAll('button');
+  if(btns.length===2){
+    btns[0].disabled=(i<=0);
+    btns[1].disabled=(i<0||i>=ROS_MONTHS.length-1);
+    btns[0].style.opacity=btns[0].disabled?0.35:1;
+    btns[1].style.opacity=btns[1].disabled?0.35:1;
+  }
+}
+
+// ซ่อมข้อมูลเดิมใน Sheet ที่คอลัมน์ DATE ถูกแปลงเป็นวันที่ (ทำครั้งเดียวพอ)
+function rosFixDates(){
+  toast('กำลังซ่อมวันที่…','');
+  jsonp(ADMIN_URL,{action:'rosFix'}).then(function(j){
+    if(!j.ok){ toast('ซ่อมไม่สำเร็จ: '+(j.error||''),'err'); return; }
+    toast('ซ่อมแล้ว '+j.fixed+' แถว (จาก '+j.total+')','ok');
+    ROS_MONTH=''; loadRos(true);
+  }).catch(function(e){ toast('ซ่อมไม่สำเร็จ: '+(e.error||e.message||e),'err'); });
+}
+
+function toggleBatches(){
+  var el=document.getElementById('cmpBatches');
+  el.classList.toggle('hidden');
+  if(el.classList.contains('hidden'))return;
+  if(!ROS_BATCHES||!ROS_BATCHES.length){ el.innerHTML='<div style="color:var(--muted);font-size:13px">ยังไม่มีไฟล์ที่ import</div>'; return; }
+  el.innerHTML='<table><thead><tr><th>ไฟล์</th><th style="text-align:right">แถว</th><th>ช่วงวันที่</th><th>อัปโหลดเมื่อ</th></tr></thead><tbody>'+
+    ROS_BATCHES.map(function(b){return '<tr><td>'+esc(b.src)+'</td><td style="text-align:right">'+b.rows+'</td><td>'+esc(b.minD)+' → '+esc(b.maxD)+'</td><td style="color:var(--muted)">'+esc(b.uploadedAt)+'</td></tr>';}).join('')+
+    '</tbody></table>';
+}
+
+// ---------- Trade-in side ----------
+// นับ "ลูกค้าตอบรับ Trade" ต่อ user (r.name = username พนักงานที่กรอกฟอร์ม) — ล็อคช่วง ROS
+function tradeAcceptByUser(month,minD,maxD){
+  var byUser={},total=0;
+  TRADE.forEach(function(r){
+    if(r.accept!=='ตอบรับ')return;
+    var d=tradeDay(r.ts);
+    if(!d)return;
+    if(month&&d.slice(0,7)!==month)return;
+    if(minD&&d<minD)return;
+    if(maxD&&d>maxD)return;
+    var u=String(r.name||'').replace(/\s+/g,'').toLowerCase();
+    if(!u)return;
+    byUser[u]=(byUser[u]||0)+1; total++;
+  });
+  return {byUser:byUser,total:total};
+}
+// นับ "ลูกค้าตอบรับ Trade" ต่อสาขา — จำกัดเฉพาะช่วงวันที่ ROS มีข้อมูลจริง (เทียบแฟร์)
+function tradeAcceptByLoc(month,minD,maxD){
+  var byLoc={},total=0;
+  TRADE.forEach(function(r){
+    if(r.accept!=='ตอบรับ')return;
+    var d=tradeDay(r.ts);
+    if(!d)return;
+    if(month&&d.slice(0,7)!==month)return;
+    if(minD&&d<minD)return;   // ก่อนวันแรกที่ ROS มีข้อมูล
+    if(maxD&&d>maxD)return;   // หลังวันล่าสุดที่ ROS มีข้อมูล (เช่น ROS มีถึง 15 แต่ฟอร์มมีถึง 20)
+    var std=cmpMapLoc(r.branch||r.loc||'');
+    byLoc[std]=(byLoc[std]||0)+1; total++;
+  });
+  return {byLoc:byLoc,total:total};
+}
+
+// แปลง ts ของฟอร์ม -> yyyy-MM-dd (รองรับ ISO / dd/mm/yyyy / Date)
+function ymdLocal(d){
+  return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+}
+var EN_MON={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
+function tradeDay(ts){
+  if(!ts)return '';
+  if(ts instanceof Date)return isNaN(ts)?'':ymdLocal(ts);
+  var s=String(ts).trim();
+  // 'yyyy-MM-dd...' -> ใช้ตรงๆ
+  var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m)return m[0];
+  // 'dd/MM/yyyy' (รองรับ พ.ศ.)
+  var m2=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m2){ var y=+m2[3]; if(y>2400)y-=543; return y+'-'+('0'+m2[2]).slice(-2)+'-'+('0'+m2[1]).slice(-2); }
+  // 'Sun Jul 05 2026 ...' (Date.toString() จาก Apps Script) -> อ่านวัน/เดือน/ปี ตรงจากข้อความ
+  // ไม่ผ่าน new Date() เพราะจะถูกแปลงเป็น timezone ของเครื่องผู้ใช้ แล้ววันเลื่อน
+  var m3=s.match(/^[A-Za-z]{3}\s+([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})/);
+  if(m3&&EN_MON[m3[1]])return m3[3]+'-'+('0'+EN_MON[m3[1]]).slice(-2)+'-'+('0'+m3[2]).slice(-2);
+  var d=new Date(s);
+  return isNaN(d)?'':ymdLocal(d);
+}
+
+// ---------- Render ----------
+var CMP_VIEW='loc';            // 'loc' | 'user'
+var CMP_EXPORT_ROWS=null;      // เก็บข้อมูลตารางล่าสุดไว้ Export
+var CMP_EXPORT_META=null;
+
+function setCmpViewBtns(){
+  var a=document.getElementById('cmpTabLoc'),b=document.getElementById('cmpTabUser');
+  if(!a||!b)return;
+  a.style.background=(CMP_VIEW==='loc')?'var(--brand)':'transparent';
+  a.style.color=(CMP_VIEW==='loc')?'#fff':'';
+  b.style.background=(CMP_VIEW==='user')?'var(--brand)':'transparent';
+  b.style.color=(CMP_VIEW==='user')?'#fff':'';
+}
+function setCmpView(v){
+  CMP_VIEW=v;
+  setCmpViewBtns();
+  renderCompare();
+}
+
+// สี %ATR ไล่ตามค่าสูงสุดในตาราง
+function cmpRateBg(p,maxRate){
+  var t=maxRate?Math.max(0,Math.min(1,p/maxRate)):0;
+  return 'rgba('+Math.round(150-100*t)+','+Math.round(170-30*t)+','+Math.round(90-30*t)+','+(0.18+0.72*t)+')';
+}
+function cmpBar(v,max,col){
+  var w=max?Math.round(100*v/max):0;
+  return '<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">'+
+    '<span style="min-width:28px;text-align:right">'+v+'</span>'+
+    '<div style="width:60px;height:12px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden">'+
+    '<div style="width:'+w+'%;height:100%;background:'+col+'"></div></div></div>';
+}
+
+function renderCompare(){
+  var hint=document.getElementById('cmpHint');
+  var out=document.getElementById('cmpResult');
+  if(!ROS_SUM_VIEW){ loadRos(); return; }
+
+  var salesTot=0;
+  var sumLoc=ROS_SUM_VIEW.byLoc||{};
+  for(var k in sumLoc)salesTot+=sumLoc[k].qty;
+
+  if(!salesTot){
+    hint.classList.remove('hidden');
+    hint.innerHTML='ยังไม่มีข้อมูล — กด <b>Import ไฟล์ ROS</b> เพื่อเริ่มสะสมข้อมูล<br><span style="font-size:12px">ระบบจะกรอง PRODUCT TYPE = DEVICE และรุ่นที่กำหนด ('+CMP_MODELS.length+' รุ่น) แล้วเก็บสะสม</span>';
+    out.innerHTML=''; CMP_EXPORT_ROWS=null;
+    return;
+  }
+  hint.classList.add('hidden');
+
+  var minD=ROS_SUM_VIEW.minD,maxD=ROS_SUM_VIEW.maxD;
+  var rangeTxt=monthLabel(ROS_MONTH)+(minD?(' · เทียบช่วง '+thDay(minD)+'–'+thDay(maxD)):'');
+  var trLocTot=0; // total trade-in (นับจากช่วง ROS)
+  (function(){ var tr=tradeAcceptByLoc(ROS_MONTH,minD,maxD); trLocTot=tr.total; })();
+  var rateTot=salesTot?100*trLocTot/salesTot:0;
+
+  // ---- staleMsg ----
+  var staleMsg='';
+  if(modelsStale()){
+    var used=ROS_SUM_VIEW.modelsUsed||[];
+    var added=CMP_MODELS.filter(function(m){return used.indexOf(m)<0;});
+    var gone=used.filter(function(m){return CMP_MODELS.indexOf(m)<0;});
+    var detail=[];
+    if(added.length)detail.push('เพิ่ม: '+added.join(', '));
+    if(gone.length)detail.push('เอาออก: '+gone.join(', '));
+    staleMsg='<div class="card" style="margin-bottom:12px;padding:12px;background:rgba(255,180,0,.10);border-color:rgba(255,180,0,.4)">'+
+      '<b>⚠ ยอดยังไม่รวมรุ่นที่เพิ่งแก้</b><br>'+
+      '<span style="font-size:13px;color:var(--muted)">ข้อมูลที่เก็บไว้ถูก import ด้วยรุ่นชุดเดิม ('+used.length+' รุ่น) '+
+      'ตอนนี้ตั้งไว้ '+CMP_MODELS.length+' รุ่น'+(detail.length?(' — '+esc(detail.join(' · '))):'')+
+      '<br><b>กด "⬆ Import ไฟล์ ROS" อัปโหลดไฟล์เดิมซ้ำ</b> เพื่อให้ยอดตรงตามรุ่นใหม่ (ระบบแทนที่ให้ ไม่เบิ้ล)</span></div>';
+  }
+
+  // render table ก่อน (จะได้ totals ที่ตรงกับมุมมอง) แล้วค่อยเติม stats ด้านบน
+  var tableHtml = (CMP_VIEW==='user') ? renderByUser(rangeTxt) : renderByLoc(rangeTxt);
+  var mSalesTot = (CMP_EXPORT_META&&CMP_EXPORT_META.salesTot!=null) ? CMP_EXPORT_META.salesTot : salesTot;
+  var mTrTot    = (CMP_EXPORT_META&&CMP_EXPORT_META.trTot!=null)    ? CMP_EXPORT_META.trTot    : trLocTot;
+  var mRateTot  = mSalesTot ? 100*mTrTot/mSalesTot : 0;
+  var statLabel = (CMP_VIEW==='user') ? ' (AIS + Pro)' : '';
+  var statsHtml='<div class="stats" style="margin:0 0 14px">'+
+    stat(mSalesTot,'Total Sales'+statLabel)+stat(mTrTot,'Total Trade-in'+statLabel)+stat(mRateTot.toFixed(2)+'%','Attachment rate')+'</div>';
+
+  out.innerHTML=staleMsg+statsHtml+tableHtml;
+}
+
+function renderByLoc(rangeTxt){
+  var sales={},salesTot=0;
+  var sum=ROS_SUM_VIEW.byLoc||{};
+  for(var k in sum){ var o=sum[k]; var std=cmpMapLoc(o.name); if(!sales[std])sales[std]={code:o.code,qty:0}; sales[std].qty+=o.qty; salesTot+=o.qty; }
+  var tr=tradeAcceptByLoc(ROS_MONTH,ROS_SUM_VIEW.minD,ROS_SUM_VIEW.maxD);
+
+  var rates={};
+  Object.keys(sales).forEach(function(s){ var sv=sales[s].qty; rates[s]=sv?100*(tr.byLoc[s]||0)/sv:0; });
+  var stds=Object.keys(sales).sort(function(a,b){ return rates[b]-rates[a]; });
+  var maxSale=Math.max.apply(null,stds.map(function(s){return sales[s].qty;}).concat([1]));
+  var maxTr=Math.max.apply(null,stds.map(function(s){return tr.byLoc[s]||0;}).concat([1]));
+  var trTot=stds.reduce(function(a,s){return a+(tr.byLoc[s]||0);},0);
+  var maxRate=Math.max.apply(null,stds.map(function(s){return rates[s];}).concat([1]));
+  var rateTot=salesTot?100*trTot/salesTot:0;
+
+  // เก็บไว้ export
+  CMP_EXPORT_ROWS=stds.map(function(s){ return {name:s,code:sales[s].code||'',sales:sales[s].qty,tradein:tr.byLoc[s]||0,rate:rates[s]}; });
+  CMP_EXPORT_META={view:'By Location',range:rangeTxt,salesTot:salesTot,trTot:trTot,rateTot:rateTot};
+
+  var body=stds.map(function(s){
+    return '<tr>'+
+      '<td>'+esc(s)+'</td>'+
+      '<td style="color:var(--muted)">'+esc(sales[s].code||'')+'</td>'+
+      '<td>'+cmpBar(sales[s].qty,maxSale,'#2f7de1')+'</td>'+
+      '<td>'+cmpBar(tr.byLoc[s]||0,maxTr,'#4c8ff5')+'</td>'+
+      '<td style="text-align:right;background:'+cmpRateBg(rates[s],maxRate)+';font-weight:700">'+rates[s].toFixed(2)+'%</td>'+
+    '</tr>';
+  }).join('');
+
+  return '<div class="card">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+      '<h3 style="margin:0">By Location</h3>'+
+      '<span style="font-size:12px;color:var(--muted)">'+esc(rangeTxt)+' · '+(ROS_SUM_VIEW.dates||[]).length+' วันที่มีข้อมูล</span>'+
+    '</div>'+
+    '<table><thead><tr><th>location_name</th><th>Code</th><th style="text-align:right">Total Sales</th><th style="text-align:right">Total Trade-in</th><th style="text-align:right">Attachment rate</th></tr></thead>'+
+    '<tbody>'+body+
+    '<tr style="font-weight:700;border-top:2px solid var(--line)"><td>Grand total</td><td></td><td style="text-align:right">'+salesTot+'</td><td style="text-align:right">'+trTot+'</td><td style="text-align:right">'+rateTot.toFixed(2)+'%</td></tr>'+
+    '</tbody></table>'+
+    '<div style="font-size:12px;color:var(--muted);margin-top:10px">Total Sales = ROS (DEVICE + '+CMP_MODELS.length+' รุ่น, สะสม) · Total Trade-in = ลูกค้าตอบรับ Trade จากการตอบแบบฟอร์ม 1</div>'+
+  '</div>';
+}
+
+function renderByUser(rangeTxt){
+  var su=ROS_SUM_VIEW.byUser||{};
+  var tr=tradeAcceptByUser(ROS_MONTH,ROS_SUM_VIEW.minD,ROS_SUM_VIEW.maxD);
+
+  // สร้างรายชื่อ user "ทั้งหมด" จากทะเบียน Staff_AIS + AIS_Pro (แสดงแม้ยังไม่มียอด)
+  var roster={};   // username(lower) -> {branch, pro, pin}
+  var pinToUser={}; // pin -> username(lower) สำหรับ fallback
+  function addRoster(u,branch,pro,pin){
+    u=String(u||'').replace(/\s+/g,'').toLowerCase();
+    if(!u)return;
+    if(isMgrSup(u.toUpperCase(),pin))return; // ตัด Mgr/Sup
+    if(!roster[u])roster[u]={branch:cmpMapLoc(branch||''),pro:pro||'',pin:String(pin||'').trim()};
+    else if(!roster[u].pro&&pro)roster[u].pro=pro;
+    var p=String(pin||'').replace(/\s+/g,'').trim();
+    if(p&&!pinToUser[p])pinToUser[p]=u;
+  }
+  (DB.ais||[]).forEach(function(r){ addRoster(r.name,r.branch,proOf(String(r.name||'').toUpperCase(),r.pin||''),r.pin); });
+  PRO_ROSTER.forEach(function(r){ addRoster(r.name,r.branch,r.pro,r.pin); });
+
+  // รวมยอด ROS + trade-in ให้ user แต่ละคน โดย match username ก่อน ไม่เจอค่อย match ด้วย PIN
+  var salesOf={}, tradeOf={};
+  function bump(map,key,val){ if(!key)return; map[key]=(map[key]||0)+val; }
+  // ---- ROS sales ----
+  var extra=0;
+  Object.keys(su).forEach(function(k){
+    var o=su[k]; var uname=String(o.user||'').replace(/\s+/g,'').toLowerCase();
+    var pin=String(o.pin||'').replace(/\s+/g,'').trim();
+    var target=null;
+    if(uname&&roster[uname])target=uname;              // 1) match username
+    else if(pin&&pinToUser[pin])target=pinToUser[pin]; // 2) fallback PIN
+    if(target)bump(salesOf,target,o.qty);
+    else if(!isMgrSup(uname.toUpperCase(),pin))extra++; // มีใน ROS แต่ไม่อยู่ในทะเบียน
+  });
+  // ---- Trade-in accept (ฟอร์มมีแค่ username ไม่มี PIN) ----
+  Object.keys(tr.byUser).forEach(function(k){
+    var uname=String(k||'').replace(/\s+/g,'').toLowerCase();
+    if(uname&&roster[uname])bump(tradeOf,uname,tr.byUser[k]);
+  });
+
+  var excluded=0;
+  var rows=[];
+  Object.keys(roster).forEach(function(u){
+    var uname=u.toUpperCase();
+    var sv=salesOf[u]||0;
+    var tv=tradeOf[u]||0;
+    var std=roster[u].branch || staffBranch(u);
+    if(!std)std='(ไม่ระบุสาขา)';
+    rows.push({user:uname, sales:sv, tradein:tv, rate:sv?100*tv/sv:0, branch:std, pro:roster[u].pro, noYield:(sv===0&&tv===0)});
+  });
+
+  var salesTot=rows.reduce(function(a,r){return a+r.sales;},0);
+  var trTot=rows.reduce(function(a,r){return a+r.tradein;},0);
+  var rateTot=salesTot?100*trTot/salesTot:0;
+  var maxRate=Math.max.apply(null,rows.map(function(r){return r.rate;}).concat([1]));
+
+  // จัดกลุ่มตามสาขา
+  var groups={};
+  rows.forEach(function(r){ (groups[r.branch]=groups[r.branch]||[]).push(r); });
+  var branchOrder=Object.keys(groups).sort();
+  // เรียง user ในแต่ละสาขาตามชื่อ (A-Z) ให้ตรงรูป
+  branchOrder.forEach(function(b){ groups[b].sort(function(a,c){
+    if(a.noYield!==c.noYield)return a.noYield?1:-1;   // มียอดขึ้นก่อน
+    return a.user<c.user?-1:a.user>c.user?1:0;         // แล้วเรียงชื่อ A-Z
+  }); });
+
+  // export: มีคอลัมน์สาขา
+  CMP_EXPORT_ROWS=[];
+  branchOrder.forEach(function(b){
+    groups[b].forEach(function(r){ CMP_EXPORT_ROWS.push({branch:b,user:r.user,pro:r.pro||'',sales:r.sales,tradein:r.tradein,rate:r.rate}); });
+  });
+  CMP_EXPORT_META={view:'By User',range:rangeTxt,salesTot:salesTot,trTot:trTot,rateTot:rateTot};
+
+  var bodyParts=[];
+  branchOrder.forEach(function(b){
+    var g=groups[b];
+    var bSales=g.reduce(function(a,r){return a+r.sales;},0);
+    var bTr=g.reduce(function(a,r){return a+r.tradein;},0);
+    var bRate=bSales?100*bTr/bSales:0;
+    // หัวสาขา
+    bodyParts.push('<tr style="background:rgba(141,198,63,.10)">'+
+      '<td style="font-weight:700">'+esc(b)+'</td>'+
+      '<td style="text-align:right;font-weight:700">'+bSales+'</td>'+
+      '<td style="text-align:right;font-weight:700">'+bTr+'</td>'+
+      '<td style="text-align:right;font-weight:700">'+bRate.toFixed(2)+'%</td></tr>');
+    // user ในสาขา
+    g.forEach(function(r){
+      var proBadge='';
+      if(r.pro){
+        var isApple=/apple/i.test(r.pro);
+        var col=isApple?'rgba(120,170,255,.9)':'rgba(141,198,63,.95)';
+        var bg=isApple?'rgba(120,170,255,.12)':'rgba(141,198,63,.12)';
+        proBadge=' <span style="font-size:11px;padding:1px 6px;border-radius:8px;color:'+col+';background:'+bg+';font-weight:600">'+esc(r.pro)+'</span>';
+      }
+      var rowStyle=r.noYield?' style="opacity:.5"':'';
+      bodyParts.push('<tr'+rowStyle+'>'+
+        '<td style="padding-left:24px">'+esc(r.user)+proBadge+'</td>'+
+        '<td style="text-align:right">'+r.sales+'</td>'+
+        '<td style="text-align:right">'+r.tradein+'</td>'+
+        '<td style="text-align:right;background:'+(r.noYield?'transparent':cmpRateBg(r.rate,maxRate))+'">'+(r.sales?r.rate.toFixed(2)+'%':'-')+'</td></tr>');
+    });
+  });
+
+  return '<div class="card">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+      '<h3 style="margin:0">By User</h3>'+
+      '<span style="font-size:12px;color:var(--muted)">'+esc(rangeTxt)+' · '+rows.length+' คน (Staff_AIS + Pro)'+(extra?(' · มีใน ROS แต่ไม่อยู่ในทะเบียน '+extra):'')+'</span>'+
+    '</div>'+
+    '<table><thead><tr><th>สาขา / พนักงาน</th><th style="text-align:right">Total Sales</th><th style="text-align:right">Total Trade-in</th><th style="text-align:right">Attachment rate</th></tr></thead>'+
+    '<tbody>'+bodyParts.join('')+
+    '<tr style="font-weight:700;border-top:2px solid var(--line);background:rgba(120,170,255,.10)"><td>Grand Total</td><td style="text-align:right">'+salesTot+'</td><td style="text-align:right">'+trTot+'</td><td style="text-align:right">'+rateTot.toFixed(2)+'%</td></tr>'+
+    '</tbody></table>'+
+    '<div style="font-size:12px;color:var(--muted);margin-top:10px">แสดง Staff_AIS + AIS Pro ทุกคน (ตัด Mgr/Sup · ไม่ดึง Staff_PC) — คนที่ยังไม่มียอดจะจางลง · จัดกลุ่มตามสาขา · Trade-in = ลูกค้าตอบรับ จากผู้กรอกฟอร์ม</div>'+
+  '</div>';
+}
+
+// อยู่ใน Staff_AIS หรือ AIS_Pro หรือไม่ (whitelist — เทียบเฉพาะ 2 ทะเบียนนี้)
+function isAisOrPro(username){
+  var u=String(username||'').replace(/\s+/g,'').toLowerCase();
+  if(!u)return false;
+  for(var i=0;i<(DB.ais||[]).length;i++){
+    if(String(DB.ais[i].name||'').replace(/\s+/g,'').toLowerCase()===u)return true;
+  }
+  for(var k=0;k<PRO_ROSTER.length;k++){
+    if(String(PRO_ROSTER[k].name||'').replace(/\s+/g,'').toLowerCase()===u)return true;
+  }
+  return false;
+}
+
+// หาสาขาของ user จากทะเบียน (กรณี ROS ไม่มียอดคนนี้ แต่มี trade-in)
+function staffBranch(username){
+  var u=String(username||'').replace(/\s+/g,'').toLowerCase();
+  var arr=(DB.ais||[]).concat(DB.pc||[]);
+  for(var i=0;i<arr.length;i++){
+    var n=String(arr[i].name||'').replace(/\s+/g,'').toLowerCase();
+    if(n===u)return cmpMapLoc(arr[i].branch||'');
+  }
+  return '';
+}
+
+// หาชื่อพนักงานจากทะเบียน (username -> ชื่อจริง) จาก DB ที่โหลดไว้แล้ว
+var STAFF_NAME_MAP=null;
+function staffDisplayName(username){
+  if(!STAFF_NAME_MAP){
+    STAFF_NAME_MAP={};
+    ['ais','pc'].forEach(function(t){
+      (DB[t]||[]).forEach(function(r){
+        var u=String(r.name||'').replace(/\s+/g,'').toLowerCase();
+        if(u&&!STAFF_NAME_MAP[u])STAFF_NAME_MAP[u]=r.name;
+      });
+    });
+  }
+  return STAFF_NAME_MAP[String(username||'').replace(/\s+/g,'').toLowerCase()]||'';
+}
+
+// ---- Export เป็น Excel ----
+function exportCompare(){
+  if(!CMP_EXPORT_ROWS||!CMP_EXPORT_ROWS.length){ toast('ยังไม่มีข้อมูลให้ export','err'); return; }
+  if(typeof XLSX==='undefined'){ toast('ตัวช่วย Excel ยังไม่พร้อม','err'); return; }
+  var meta=CMP_EXPORT_META, rows=CMP_EXPORT_ROWS, aoa=[];
+  aoa.push([meta.view+' — '+meta.range]);
+  aoa.push([]);
+  if(CMP_VIEW==='user'){
+    aoa.push(['สาขา','พนักงาน (username)','AIS Pro','Total Sales','Total Trade-in','Attachment rate']);
+    rows.forEach(function(r){ aoa.push([r.branch||'',r.user,r.pro||'',r.sales,r.tradein,(r.rate.toFixed(2)+'%')]); });
+    aoa.push([]);
+    aoa.push(['Grand Total','','',meta.salesTot,meta.trTot,meta.rateTot.toFixed(2)+'%']);
+  }else{
+    aoa.push(['location_name','Code','Total Sales','Total Trade-in','Attachment rate']);
+    rows.forEach(function(r){ aoa.push([r.name,r.code||'',r.sales,r.tradein,(r.rate.toFixed(2)+'%')]); });
+    aoa.push([]);
+    aoa.push(['Grand total','',meta.salesTot,meta.trTot,meta.rateTot.toFixed(2)+'%']);
+  }
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,meta.view);
+  var fn=(CMP_VIEW==='user'?'ByUser':'ByLocation')+'_'+(ROS_MONTH||'all')+'.xlsx';
+  XLSX.writeFile(wb,fn);
+  toast('ดาวน์โหลด '+fn,'ok');
+}
+
+function renderPerf(){
+  var rows=buildPerfRows();
+  var isPc=(PF_TYPE==='pc');
+  document.getElementById('pfTypeLabel').textContent=isPc?'(PC)':'(AIS Staff)';
+  var cntEl=document.getElementById('pfMgrCount');
+  if(cntEl){
+    // นับ match จาก roster เต็ม (ก่อน filter) ของประเภทนี้
+    var full=(isPc?DB.pc:DB.ais)||[];
+    var matched=full.filter(function(r){return !r.deleted&&r.active&&isMgrSup(r.name,r.pin);}).length;
+    cntEl.textContent='• Mgr/Sup ในชีท '+MGRSUP.length+' คน · match ('+(isPc?'PC':'AIS')+') '+matched+' คน';
+  }
+  var withY=rows.filter(function(u){return u.hasYield;});
+  var noY=rows.filter(function(u){return !u.hasYield;});
+  var pctY=rows.length?Math.round(100*withY.length/rows.length):0;
+  document.getElementById('pfStats').innerHTML=
+    stat(rows.length,'พนักงานทั้งหมด')+
+    stat(withY.length,'มียอดแล้ว ('+pctY+'%)')+
+    stat(noY.length,'ยังไม่มียอด ('+(100-pctY)+'%)');
+
+  // ===== สรุปต่อสาขา =====
+  var byBranch={};
+  rows.forEach(function(u){
+    var b=u.branch||'(ไม่ระบุสาขา)';
+    if(!byBranch[b])byBranch[b]={branch:b,total:0,yes:0,no:0,noList:[]};
+    byBranch[b].total++;
+    if(u.hasYield)byBranch[b].yes++; else{ byBranch[b].no++; byBranch[b].noList.push(u); }
+  });
+  var branches=Object.values(byBranch).sort(function(a,b){
+    var pa=a.total?a.yes/a.total:0, pb=b.total?b.yes/b.total:0;
+    return pa-pb || b.no-a.no; // สาขา % มียอดต่ำ (คนไม่มียอดเยอะ) อยู่บน
+  });
+  PERF_NOLIST={};
+  var bb=document.getElementById('pfBranchBody'); bb.innerHTML='';
+  document.getElementById('pfBranchEmpty').style.display=branches.length?'none':'block';
+  var nid=0;
+  branches.forEach(function(x){
+    var pct=x.total?Math.round(100*x.yes/x.total):0;
+    var pctColor=pct>=80?'#8DC63F':(pct>=50?'#f5a623':'#e5484d');
+    var noCell;
+    if(x.no>0){
+      var id='pn'+(nid++); PERF_NOLIST[id]=x.noList;
+      noCell='<td style="text-align:center;cursor:pointer" class="dashCell" '+
+        'onmouseenter="showPerfPop(event,\''+id+'\')" onmouseleave="hidePerfPop()">'+
+        '<b style="color:#e5484d">'+x.no+'</b> 👤</td>';
+    }else{
+      noCell='<td style="text-align:center;color:#8DC63F">0</td>';
+    }
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td style="font-weight:600">'+esc(x.branch)+'</td>'+
+      '<td style="text-align:center;font-weight:700">'+x.total+'</td>'+
+      '<td style="text-align:center;color:#8DC63F">'+x.yes+'</td>'+
+      noCell+
+      '<td style="text-align:center;font-weight:700;color:'+pctColor+'">'+pct+'%</td>';
+    bb.appendChild(tr);
+  });
+
+  // ===== รายละเอียดราย User =====
+  var head=document.getElementById('pfDetailHead');
+  head.innerHTML='<th>#</th><th>พนักงาน</th>'+
+    (isPc?'<th>Brand</th>':'<th>AIS Pro</th>')+
+    '<th>สาขา</th><th>ตำแหน่ง</th>'+
+    '<th style="text-align:center">รับ</th><th style="text-align:center">ไม่รับ</th>'+
+    '<th style="text-align:center">รวม</th><th style="text-align:right">%ATR</th>';
+  rows.sort(function(a,b){
+    if(a.hasYield!==b.hasYield)return a.hasYield?-1:1;
+    return b.rate-a.rate || b.total-a.total || a.name.localeCompare(b.name);
+  });
+  var tb=document.getElementById('pfTbody'); tb.innerHTML='';
+  document.getElementById('pfEmpty').style.display=rows.length?'none':'block';
+  rows.forEach(function(u,i){
+    var rc=u.total?(u.rate>=15?'#8DC63F':'#e5484d'):'#586069';
+    var col3=isPc?esc(u.brand||'—'):(u.pro?('<span class="pill" style="background:rgba(245,166,35,.15);color:#f5a623">Pro '+esc(u.pro)+'</span>'):'<span class="sub">—</span>');
+    var tr=document.createElement('tr');
+    if(!u.hasYield)tr.style.background='rgba(229,72,77,.06)';
+    tr.innerHTML='<td class="sub">'+(i+1)+'</td>'+
+      '<td style="font-weight:600">'+esc(u.name)+'</td>'+
+      '<td>'+col3+'</td>'+
+      '<td>'+esc(u.branch||'')+'</td>'+
+      '<td>'+(u.mgrSup?'<span class="pill" style="background:rgba(139,148,158,.2);color:#c9d1d9">Mgr/Sup</span>':'<span class="sub">Staff</span>')+'</td>'+
+      '<td style="text-align:center;color:#8DC63F">'+u.acc+'</td>'+
+      '<td style="text-align:center;color:var(--muted)">'+u.rej+'</td>'+
+      '<td style="text-align:center;font-weight:700">'+u.total+'</td>'+
+      '<td style="text-align:right;font-weight:700;color:'+rc+'">'+(u.total?u.rate.toFixed(1)+'%':'—')+'</td>';
+    tb.appendChild(tr);
+  });
+}
+// hover popover สำหรับ "ยังไม่มียอด" ต่อสาขา
+var PERF_NOLIST={}, _perfHideT=null;
+function showPerfPop(ev,id){
+  var list=PERF_NOLIST[id]; if(!list||!list.length)return;
+  if(_perfHideT){clearTimeout(_perfHideT);_perfHideT=null;}
+  var pop=document.getElementById('perfPop');
+  if(!pop){
+    pop=document.createElement('div'); pop.id='perfPop'; document.body.appendChild(pop);
+    pop.addEventListener('mouseenter',function(){ if(_perfHideT){clearTimeout(_perfHideT);_perfHideT=null;} });
+    pop.addEventListener('mouseleave',hidePerfPop);
+  }
+  pop.innerHTML='<div class="dpHead">ยังไม่มียอด '+list.length+' คน</div>'+list.map(function(u){
+    var tag=u.type==='PC'?('PC'+(u.brand?' '+u.brand:'')):(u.pro?('Pro '+u.pro):'AIS');
+    return '<div class="dpRow"><span class="noimg">'+esc((u.name||'?').charAt(0))+'</span>'+
+      '<div><div class="dpNm">'+esc(u.name)+'</div><div class="dpRole">'+esc(tag)+(u.mgrSup?' · Mgr/Sup':'')+'</div></div></div>';
+  }).join('');
+  pop.style.display='block';
+  var r=ev.target.getBoundingClientRect();
+  var top=r.bottom+window.scrollY+6, left=r.left+window.scrollX-70;
+  if(left<8)left=8;
+  if(left+240>window.innerWidth)left=window.innerWidth-248;
+  pop.style.top=top+'px'; pop.style.left=left+'px';
+}
+function hidePerfPop(){
+  if(_perfHideT)clearTimeout(_perfHideT);
+  _perfHideT=setTimeout(function(){ var p=document.getElementById('perfPop'); if(p)p.style.display='none'; },220);
+}
+function exportPerf(){
+  if(typeof XLSX==='undefined'){ toast('กำลังโหลดตัวช่วย Export ลองอีกครั้ง','err'); return; }
+  var rows=buildPerfRows();
+  if(!rows.length){ toast('ไม่มีข้อมูล','err'); return; }
+  rows.sort(function(a,b){
+    if(a.hasYield!==b.hasYield)return a.hasYield?-1:1;
+    return b.rate-a.rate || a.name.localeCompare(b.name);
+  });
+  var pv=document.getElementById('pfPeriod').value;
+  var aoa=[['#','พนักงาน','ประเภท','AIS Pro','สาขา','ตำแหน่ง','รับ','ไม่รับ','รวม','%ATR','สถานะ']];
+  rows.forEach(function(u,i){
+    aoa.push([i+1,u.name,u.type,(u.type==='PC'?'':u.pro),u.branch||'',(u.mgrSup?'Mgr/Sup':'Staff'),u.acc,u.rej,u.total,
+      u.total?(u.rate.toFixed(1)+'%'):'',(u.hasYield?'มียอด':'ยังไม่มียอด')]);
+  });
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:5},{wch:24},{wch:8},{wch:10},{wch:26},{wch:10},{wch:6},{wch:6},{wch:6},{wch:8},{wch:12}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Staff Performance');
+  var d=new Date(),pad=function(n){return(n<10?'0':'')+n;};
+  XLSX.writeFile(wb,'StaffPerformance_'+pv+'_'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'.xlsx');
+}
+
+var OPT={noAccept:[],noTrade:[]};
+function loadOptions(){
+  jsonp(TRADEIN_URL,{action:'getOptions'}).then(function(res){
+    if(res&&res.ok){ OPT=res.data; renderOpt('noAccept'); renderOpt('noTrade'); }
+    else toast((res&&res.error)||'โหลดตัวเลือกล้มเหลว','err');
+  }).catch(function(){ toast('เชื่อมต่อไม่ได้','err'); });
+}
+function renderOpt(cat){
+  var box=document.getElementById(cat==='noAccept'?'optNoAccept':'optNoTrade');
+  box.innerHTML='';
+  (OPT[cat]||[]).forEach(function(v,i){
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:6px';
+    row.innerHTML='<input class="search" style="flex:1" value="'+esc(v)+'" onchange="editOpt(\''+cat+'\','+i+',this.value)">'+
+      '<button class="ico danger" onclick="rmOpt(\''+cat+'\','+i+')">🗑</button>';
+    box.appendChild(row);
+  });
+}
+function addOpt(cat){
+  var inp=document.getElementById(cat==='noAccept'?'newNoAccept':'newNoTrade');
+  var v=inp.value.trim(); if(!v)return;
+  OPT[cat].push(v); inp.value=''; renderOpt(cat);
+}
+function editOpt(cat,i,v){ OPT[cat][i]=v.trim(); }
+function rmOpt(cat,i){ OPT[cat].splice(i,1); renderOpt(cat); }
+function saveOpt(cat){
+  if(!ADMIN_PASS_CACHE){
+    var p=prompt('ยืนยันรหัสผ่าน admin เพื่อบันทึก:');
+    if(!p)return; ADMIN_PASS_CACHE=p;
+  }
+  var vals=(OPT[cat]||[]).map(function(x){return String(x).trim();}).filter(Boolean);
+  jsonp(TRADEIN_URL,{action:'setOptions',category:cat,values:vals.join('|'),
+    user:sessionStorage.getItem('adminUser')||'admin',pass:ADMIN_PASS_CACHE}).then(function(res){
+    if(res&&res.ok){ toast('บันทึกสำเร็จ ('+res.count+' ตัวเลือก)','ok'); loadOptions(); }
+    else { toast((res&&res.error)||'บันทึกล้มเหลว','err'); if(res&&res.error==='unauthorized')ADMIN_PASS_CACHE=''; }
+  }).catch(function(){ toast('เชื่อมต่อไม่ได้','err'); });
+}
+
+var PRO_ROSTER=[]; // [{name,pin,branch,pro}]
+function loadProRoster(){
+  jsonp(ADMIN_URL,{action:'proList'}).then(function(res){
+    if(res&&res.ok)PRO_ROSTER=res.data||[];
+    renderStaff();
+    if(curMain==='dash')renderDash(); // roster เพิ่งมา -> คำนวณ Pro Apple/Samsung ใหม่
+    if(curMain==='perf')renderPerf();
+    if(curMain==='compare')renderCompare();
+  }).catch(function(){});
+  jsonp(ADMIN_URL,{action:'mgrSupList'}).then(function(res){
+    if(res&&res.ok)MGRSUP=res.data||[];
+    if(curMain==='perf')renderPerf();
+  }).catch(function(){});
+}
+var MGRSUP=[]; // [{name,pin}] Flag Mgr/Sup (นับด้วย แต่ติดธง)
+function loadMgrSup(){
+  jsonp(ADMIN_URL,{action:'mgrSupList'}).then(function(res){
+    if(res&&res.ok)MGRSUP=res.data||[];
+    if(curMain==='perf')renderPerf();
+    if(curMain==='compare')renderCompare();
+  }).catch(function(){});
+}
+// match: ใช้ User ที่ลงทะเบียนก่อน ถ้าไม่ตรงค่อยตรวจ PIN
+function isMgrSup(name,pin){
+  var n=String(name||'').replace(/\s+/g,' ').trim().toUpperCase();
+  var p=String(pin||'').trim();
+  // 1) match ด้วยชื่อก่อน
+  for(var i=0;i<MGRSUP.length;i++){
+    if(MGRSUP[i].name===n) return true;
+  }
+  // 2) ถ้าชื่อไม่ตรง -> ตรวจ PIN
+  if(p){
+    for(var j=0;j<MGRSUP.length;j++){
+      if(String(MGRSUP[j].pin||'').trim()===p) return true;
+    }
+  }
+  return false;
+}
+// หา AIS Pro ของพนักงาน AIS จาก name+pin
+function proOf(name,pin){
+  var n=String(name||'').replace(/\s+/g,' ').trim().toUpperCase();
+  var p=String(pin||'').trim();
+  for(var i=0;i<PRO_ROSTER.length;i++){
+    var ru=String(PRO_ROSTER[i].name||'').replace(/\s+/g,' ').trim().toUpperCase();
+    if(ru===n && String(PRO_ROSTER[i].pin||'').trim()===p) return PRO_ROSTER[i].pro||'';
+    // proList อาจไม่มี pin -> match ด้วยชื่ออย่างเดียวเป็น fallback
+  }
+  // fallback: match ด้วยชื่ออย่างเดียว
+  for(var j=0;j<PRO_ROSTER.length;j++){
+    var ru2=String(PRO_ROSTER[j].name||'').replace(/\s+/g,' ').trim().toUpperCase();
+    if(ru2===n) return PRO_ROSTER[j].pro||'';
+  }
+  return '';
+}
+function loadStaff(){
+  jsonp(ADMIN_URL,{action:'list',includeDeleted:1}).then(function(res){
+    if(res&&res.ok){ DB.ais=res.data.ais||[]; DB.pc=res.data.pc||[]; renderStaff(); loadProRoster(); }
+    else toast((res&&res.error)||'โหลดล้มเหลว','err');
+  }).catch(function(){ toast('เชื่อมต่อไม่ได้','err'); });
+}
+/* ============ profile photo fallback ============ */
+// รูปโหลดไม่ได้ -> แสดงวงกลมตัวอักษรแทน (วิธี B: รูปอัปเดตตอนพนักงาน login)
+function onPicError(img){
+  img.onerror=null;
+  var init=img.getAttribute('data-init')||'?';
+  img.outerHTML='<span class="pic picInit">'+init+'</span>';
+}
+
+function switchType(t){
+  curType=t;
+  document.querySelectorAll('.subtabs button').forEach(function(b){b.classList.toggle('on',b.dataset.type===t);});
+  document.getElementById('brandFld').style.display=(t==='pc')?'block':'none';
+  renderStaff();
+}
+function renderStaff(){
+  var rows=DB[curType]||[];
+  var showDel=document.getElementById('showDel').checked;
+  var q=document.getElementById('sSearch').value.trim().toLowerCase();
+  var list=rows.filter(function(r){
+    if(r.deleted&&!showDel)return false;
+    if(!q)return true;
+    return [r.name,r.branch,r.brand].join(' ').toLowerCase().indexOf(q)>=0;
+  });
+  var all=rows.filter(function(r){return !r.deleted;});
+  var act=all.filter(function(r){return r.active;});
+  var del=rows.filter(function(r){return r.deleted;});
+  document.getElementById('staffStats').innerHTML=
+    stat(all.length,'ทั้งหมด')+stat(act.length,'Active')+stat(all.length-act.length,'Inactive')+stat(del.length,'ลบแล้ว');
+  var isPc=curType==='pc';
+  document.getElementById('sThead').innerHTML=
+    '<tr><th>ID</th><th>พนักงาน</th>'+(isPc?'<th>Brand</th>':'<th>AIS Pro</th>')+'<th>สาขา</th><th>PIN</th><th>Active</th><th>อัปเดต</th><th></th></tr>';
+  var tb=document.getElementById('sTbody'); tb.innerHTML='';
+  document.getElementById('sEmpty').style.display=list.length?'none':'block';
+  list.forEach(function(r){
+    var tr=document.createElement('tr'); if(r.deleted)tr.className='del';
+    var initial=esc((r.name||'?').charAt(0).toUpperCase());
+    var pic=r.picture
+      ?'<img class="pic" src="'+r.picture+'" referrerpolicy="no-referrer" data-init="'+initial+'" onerror="onPicError(this)">'
+      :'<span class="pic picInit">'+initial+'</span>';
+    var a=r.deleted
+      ?'<button class="ico" title="กู้คืน" onclick="sAct(\''+r.id+'\',\'restore\')">↺</button>'
+      :'<button class="ico" title="แก้ไข" onclick="openEdit(\''+r.id+'\')">✎</button>'+
+       '<button class="ico" title="เปิด/ปิด" onclick="sAct(\''+r.id+'\',\'toggle\')">⏻</button>'+
+       '<button class="ico danger" title="ลบ" onclick="delStaff(\''+r.id+'\')">🗑</button>';
+    var proCell='';
+    if(isPc){ proCell='<td>'+esc(r.brand||'')+'</td>'; }
+    else{
+      var pro=proOf(r.name,r.pin);
+      proCell='<td>'+(pro?'<span class="pill" style="background:rgba(245,166,35,.15);color:#f5a623">Pro '+esc(pro)+'</span>':'<span class="sub">—</span>')+'</td>';
+    }
+    tr.innerHTML='<td><span class="sub">'+r.id+'</span></td>'+
+      '<td><div style="display:flex;align-items:center;gap:8px">'+pic+
+        '<div><div class="nm">'+esc(r.name)+'</div><div class="sub">'+esc(r.lineId||'')+'</div></div></div></td>'+
+      proCell+
+      '<td>'+esc(r.branch||'')+'</td>'+
+      '<td><span class="sub">'+esc(r.pin||'')+'</span></td>'+
+      '<td><span class="pill '+(r.active?'on':'off')+'">'+(r.active?'ON':'OFF')+'</span></td>'+
+      '<td><span class="sub">'+esc(r.updated||'')+'</span></td>'+
+      '<td><div class="acts">'+a+'</div></td>';
+    tb.appendChild(tr);
+  });
+}
+function stat(n,l){return '<div class="stat"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
+
+function openAdd(){
+  document.getElementById('mTitle').textContent='เพิ่มพนักงาน '+(curType==='pc'?'PC':'AIS');
+  ['f_id','f_name','f_pin','f_brand'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('f_branch').value='';
+  document.getElementById('brandFld').style.display=(curType==='pc')?'block':'none';
+  document.getElementById('ov').classList.add('show');
+}
+function openEdit(id){
+  var r=(DB[curType]||[]).find(function(x){return x.id===id;}); if(!r)return;
+  document.getElementById('mTitle').textContent='แก้ไข '+r.id;
+  document.getElementById('f_id').value=r.id;
+  document.getElementById('f_name').value=r.name||'';
+  document.getElementById('f_pin').value=r.pin||'';
+  document.getElementById('f_brand').value=r.brand||'';
+  document.getElementById('f_branch').value=r.branch||'';
+  document.getElementById('brandFld').style.display=(curType==='pc')?'block':'none';
+  document.getElementById('ov').classList.add('show');
+}
+function closeModal(){document.getElementById('ov').classList.remove('show');}
+function saveStaff(){
+  var id=document.getElementById('f_id').value;
+  var p={type:curType,name:document.getElementById('f_name').value.trim(),
+    pin:document.getElementById('f_pin').value.trim(),branch:document.getElementById('f_branch').value};
+  if(curType==='pc')p.brand=document.getElementById('f_brand').value.trim();
+  if(!p.name){toast('กรอกชื่อ','err');return;}
+  p.action=id?'update':'register'; if(id)p.id=id;
+  jsonp(ADMIN_URL,p).then(function(res){
+    if(res&&res.ok){toast(id?'แก้ไขสำเร็จ':'เพิ่มสำเร็จ','ok');closeModal();loadStaff();}
+    else toast((res&&res.error)||'บันทึกล้มเหลว','err');
+  }).catch(function(){toast('เชื่อมต่อไม่ได้','err');});
+}
+function delStaff(id){ if(!confirm('ลบพนักงานนี้? (กู้คืนได้ภายหลัง)'))return; sAct(id,'remove'); }
+function sAct(id,action){
+  jsonp(ADMIN_URL,{action:action,type:curType,id:id}).then(function(res){
+    if(res&&res.ok){toast('สำเร็จ','ok');loadStaff();}
+    else toast((res&&res.error)||'ล้มเหลว','err');
+  }).catch(function(){toast('เชื่อมต่อไม่ได้','err');});
+}
+
+function loadTrade(force){
+  return jsonp(TRADEIN_URL,{action:'list',limit:5000}).then(function(res){
+    if(res&&res.ok){ TRADE=res.data||[];
+      renderTrade();
+      if(curMain==='detail')renderDetail();
+      if(curMain==='price')renderPrice();
+      if(curMain==='compare')renderCompare();
+    }
+    else toast((res&&res.error)||'โหลดล้มเหลว','err');
+  }).catch(function(){ toast('เชื่อมต่อไม่ได้','err'); });
+}
+function onPeriodChange(){
+  var v=document.getElementById('tPeriod').value;
+  var show=(v==='range');
+  document.getElementById('tFrom').style.display=show?'block':'none';
+  document.getElementById('tTo').style.display=show?'block':'none';
+  renderTrade();
+}
+function inPeriod(tsStr){
+  var v=document.getElementById('tPeriod').value;
+  if(v==='all')return true;
+  var d=parseTs(tsStr); if(!d)return false;
+  var now=new Date();
+  if(v==='today')return sameDay(d,now);
+  if(v==='week'){ var wk=new Date(now); wk.setDate(now.getDate()-now.getDay()); wk.setHours(0,0,0,0); return d>=wk; }
+  if(v==='month')return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
+  if(v==='range'){
+    var f=document.getElementById('tFrom').value, t=document.getElementById('tTo').value;
+    if(f&&d<new Date(f+'T00:00:00'))return false;
+    if(t&&d>new Date(t+'T23:59:59'))return false;
+    return true;
+  }
+  return true;
+}
+function parseTs(s){
+  if(!s)return null;
+  s=String(s).trim();
+  // 2026-06-28 8:34:23 หรือ 2026-06-28T08:34:23 (ชั่วโมง/นาที 1-2 หลัก)
+  var m=/^(\d{4})-(\d{1,2})-(\d{1,2})[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/.exec(s);
+  if(m)return new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+(m[6]||0));
+  // 28/6/2026 8:34:23 (รูปแบบ Google Form ไทย)
+  var m2=/^(\d{1,2})\/(\d{1,2})\/(\d{4})[ ,]+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/.exec(s);
+  if(m2)return new Date(+m2[3],+m2[2]-1,+m2[1],+m2[4],+m2[5],+(m2[6]||0));
+  // วันที่อย่างเดียว
+  var m3=/^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s);
+  if(m3)return new Date(+m3[1],+m3[2]-1,+m3[3]);
+  var d=new Date(s); return isNaN(d)?null:d;
+}
+function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+
+function renderTrade(){
+  var q=document.getElementById('tSearch').value.trim().toLowerCase();
+  var acc=document.getElementById('tAccept').value;
+  var list=TRADE.filter(function(r){
+    if(!inPeriod(r.ts))return false;
+    if(acc&&r.accept!==acc)return false;
+    if(q&&[r.name,r.branch].join(' ').toLowerCase().indexOf(q)<0)return false;
+    return true;
+  });
+  var accN=list.filter(function(r){return r.accept==='ตอบรับ';}).length;
+  document.getElementById('tStats').innerHTML=
+    stat(list.length,'รายการ')+stat(accN,'ตอบรับ')+stat(list.length-accN,'ไม่ตอบรับ');
+  document.getElementById('tThead').innerHTML=
+    '<tr><th>เวลา</th><th>สาขา</th><th>พนักงาน</th><th>ผล</th><th>สาเหตุ</th><th>ร้าน/ราคา</th><th>รูป</th></tr>';
+  var tb=document.getElementById('tTbody'); tb.innerHTML='';
+  document.getElementById('tEmpty').style.display=list.length?'none':'block';
+  list.forEach(function(r){
+    var acc=r.accept==='ตอบรับ';
+    var img=acc?r.picAcc:r.picNoAcc;
+    var thumb=img?'<img class="thumb" src="'+toImg(img)+'" onclick="bigImg(\''+toImg(img)+'\')">':'<div class="nothumb">—</div>';
+    var reason=acc?'':[r.reasonNoAcc,r.reasonNoTrade].filter(Boolean).join(' / ');
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><span class="sub">'+esc(r.ts||'')+'</span></td>'+
+      '<td>'+esc(r.branch||'')+'</td>'+
+      '<td><div class="nm">'+esc(r.name||'')+'</div><div class="sub">'+esc(r.type||'')+'</div></td>'+
+      '<td><span class="pill '+(acc?'acc':'noacc')+'">'+esc(r.accept||'')+'</span></td>'+
+      '<td><span class="sub">'+esc(reason||'')+'</span></td>'+
+      '<td><span class="sub">'+esc(r.shopPrice||'')+'</span></td>'+
+      '<td>'+thumb+'</td>';
+    tb.appendChild(tr);
+  });
+}
+function toImg(u){
+  var m=/[-\w]{25,}/.exec(u||'');
+  if(m) return 'https://drive.google.com/thumbnail?id='+m[0]+'&sz=w1000';
+  return u;
+}
+function bigImg(u){ document.getElementById('imgBig').src=u; document.getElementById('imgOv').classList.add('show'); }
+function closeImg(){ document.getElementById('imgOv').classList.remove('show'); }
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var tT;
+function toast(msg,kind){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(kind||'');clearTimeout(tT);tT=setTimeout(function(){t.className='toast';},2600);}
+
+if(sessionStorage.getItem('adminAuth')==='1'){ enterApp(sessionStorage.getItem('adminUser')||'admin'); }
+</script>
+</body>
+</html>

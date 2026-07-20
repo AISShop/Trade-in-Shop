@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financing — AIS Area South</title>
+<style>
+  @font-face{ font-family:'DB Heavent'; src:url('DB_Heavent_Med_Cond_v3_2.ttf') format('truetype'); font-weight:400 }
+  @font-face{ font-family:'DB Heavent'; src:url('DBHeavent-BlackCond.ttf') format('truetype'); font-weight:800 }
+  *{font-family:'DB Heavent','Sarabun','Segoe UI',system-ui,sans-serif !important;box-sizing:border-box}
+  :root{
+    --green:#0A5C36; --lime:#8DC63F; --ink:#0f1722; --panel:#16202b;
+    --panel2:#1d2a37; --line:#2a3a48; --muted:#8aa0b2; --txt:#e8eef3;
+    --danger:#e0533d; --warn:#e0a93d; --ok:#3dba6f;
+    --cash:#3dba6f; --card:#4c8ff5; --qr:#9b6dff; --fin:#e0a93d;
+  }
+  body{margin:0;background:var(--ink);color:var(--txt);font-size:18px}
+  header{background:linear-gradient(135deg,var(--green),#0d7344);padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+  header .logo{width:34px;height:34px;border-radius:8px;background:var(--lime);display:grid;place-items:center;font-weight:800;color:var(--green)}
+  header h1{margin:0;font-size:20px;font-weight:800}
+  .wrap{max-width:1200px;margin:0 auto;padding:16px}
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .btn{background:var(--lime);color:#08331e;border:0;border-radius:9px;padding:9px 14px;cursor:pointer;font-weight:700;font-size:14px}
+  .btn.ghost{background:var(--panel);color:var(--txt);border:1px solid var(--line)}
+  .btn:disabled{opacity:.4;cursor:default}
+  select{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 12px;color:var(--txt);font-size:14px;font-family:inherit}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  .card h3{margin:0 0 12px;font-size:17px}
+  .stats{display:flex;gap:12px;flex-wrap:wrap}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 18px;min-width:130px;flex:1}
+  .stat .n{font-size:28px;font-weight:800;line-height:1}
+  .stat .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--line);font-size:15px}
+  th{background:var(--panel2);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  .muted{color:var(--muted);font-size:12px}
+  .hidden{display:none}
+  .seg{display:flex;gap:2px;background:rgba(255,255,255,.05);border-radius:8px;padding:2px}
+  .seg .pill{width:14px;height:14px;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:5px}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;color:#fff;padding:10px 18px;border-radius:10px;opacity:0;transition:.3s;pointer-events:none;z-index:99;font-size:14px}
+  #toast.show{opacity:.95}
+  #toast.err{background:var(--danger)} #toast.ok{background:var(--ok)}
+  .barrow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .bartrack{flex:1;height:22px;background:#0e1620;border-radius:5px;overflow:hidden;display:flex}
+  .barseg{height:100%}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">AIS</div>
+  <h1>Financing — Area South</h1>
+</header>
+
+<div class="wrap">
+  <div class="toolbar">
+    <label class="btn" style="cursor:pointer">
+      ⬆ Import CSV (Daily/MTD)
+      <input type="file" id="finFile" accept=".csv" style="display:none" onchange="onFinFile(event)">
+    </label>
+    <div style="display:flex;align-items:center;gap:4px">
+      <button class="btn ghost" onclick="finMonthStep(-1)" style="padding:6px 10px">‹</button>
+      <select id="finMonth" onchange="finMonthChanged()" style="min-width:150px"></select>
+      <button class="btn ghost" onclick="finMonthStep(1)" style="padding:6px 10px">›</button>
+    </div>
+    <button class="btn ghost" onclick="loadFin(true)">↻ รีเฟรช</button>
+    <button class="btn ghost" onclick="toggleFinBatches()">📋 ไฟล์ที่ import</button>
+    <span id="finFileName" class="muted"></span>
+  </div>
+
+  <div id="finBatches" class="card hidden"></div>
+  <div id="finHint" class="card muted">กำลังโหลดข้อมูล…</div>
+  <div id="finResult"></div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script>
+/* ============ CONFIG ============ */
+// ใช้ URL เดียวกับ AdminBackend.gs (รวม Financing เข้าไปแล้ว)
+var FIN_URL = 'https://script.google.com/macros/s/AKfycbxnFHnV6xFxZgl3JncF3VTf10Lmm6ewrEjADfcKRpKNIbpRzyYG0CWGIko9ZLmgNCdmDA/exec';
+
+/* ============ PAY TYPE config ============ */
+var PAY_LABELS={ CA:'เงินสด', CC:'บัตรเครดิต', QP:'QR Scan', LS:'SF+', SG:'SG', SH:'Spay Later', '':'อื่นๆ' };
+var NONFIN=['CA','CC','QP'];       // ไม่ใช่ Finance
+var FIN_TYPES=['LS','SG','SH'];    // Finance (Focus)
+var FIN_COLORS={ CA:'var(--cash)', CC:'var(--card)', QP:'var(--qr)', LS:'#e0a93d', SG:'#e07a3d', SH:'#c94fd0', '':'#5a6b7a' };
+
+/* ============ location mapping (by CODE) ============ */
+var FIN_LOC_NAME={
+  '1204':'Shop Central Surat Thani','1205':'Shop Central Hat Yai',
+  '1213':'Shop Central Phuket Floresta','1215':'Shop Central Nakhon Si Thammarat',
+  '1216':'Shop Central Samui','1241':'Shop Airport Phuket (INTER)',
+  '1245':'Shop Serenade Club Central Festival Hat Yai','1252':'Shop Hatyai Village',
+  '1255':'Shop Central Phuket Festival','1259':'Shop Robinson Trang'
+};
+function finLocName(code,fallback){ return FIN_LOC_NAME[String(code||'').trim()]||fallback||('สาขา '+code); }
+
+/* ============ state ============ */
+var FIN_SUM=null, FIN_MONTH='', FIN_MONTHS=[], FIN_BATCHES=null;
+
+/* ============ helpers ============ */
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var tT;
+function toast(m,k){var t=document.getElementById('toast');t.textContent=m;t.className='show '+(k||'');clearTimeout(tT);tT=setTimeout(function(){t.className='';},2600);}
+function jsonp(url){
+  return new Promise(function(res,rej){
+    var cb='fincb_'+Math.random().toString(36).slice(2);
+    var s=document.createElement('script');
+    var to=setTimeout(function(){cleanup();rej({error:'timeout'});},20000);
+    function cleanup(){clearTimeout(to);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);}
+    window[cb]=function(d){cleanup();res(d);};
+    s.src=url+(url.indexOf('?')<0?'?':'&')+'cb='+cb;
+    s.onerror=function(){cleanup();rej({error:'network'});};
+    document.body.appendChild(s);
+  });
+}
+var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function monthLabel(m){var mm=String(m||'').match(/^(\d{4})-(\d{2})/);if(!mm)return m||'';return (TH_MON[(+mm[2])-1]||mm[2])+' '+mm[1];}
+function thDay(d){var m=String(d||'').match(/^(\d{4})-(\d{2})-(\d{2})/);if(!m)return String(d||'');return (+m[3])+' '+(TH_MON[(+m[2])-1]||m[2]);}
+function pct(n,d){return d?(100*n/d):0;}
+
+/* ============ date parse (dd/MM/yyyy incl พ.ศ.) ============ */
+function finDate(v){
+  if(v==null||v==='')return '';
+  var s=String(v).trim();
+  var m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m){var y=+m[3];if(y>2400)y-=543;return y+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2);}
+  var m2=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m2)return m2[0];
+  return s;
+}
+
+/* ============ import CSV ============ */
+function onFinFile(ev){
+  var f=ev.target.files&&ev.target.files[0];
+  if(!f)return;
+  document.getElementById('finFileName').textContent='กำลังอ่าน '+f.name+' …';
+  // อ่านเป็น cp874 (Thai) — ใช้ TextDecoder
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var buf=e.target.result;
+      var text;
+      try{ text=new TextDecoder('windows-874').decode(buf); }
+      catch(_){ text=new TextDecoder('utf-8').decode(buf); }
+      var parsed=Papa.parse(text,{header:true,delimiter:'|',skipEmptyLines:true});
+      var rows=parseFinRows(parsed.data);
+      if(!rows.length){ toast('ไม่พบใบเสร็จที่ตรงเงื่อนไข (DEVICE + New Receipt)','err'); document.getElementById('finFileName').textContent=''; return; }
+      document.getElementById('finFileName').textContent='กำลังอัปโหลด '+rows.length+' ใบเสร็จ …';
+      uploadFin(rows,f.name);
+    }catch(err){ toast('อ่านไฟล์ไม่ได้: '+(err.message||err),'err'); document.getElementById('finFileName').textContent=''; }
+  };
+  reader.readAsArrayBuffer(f);
+  ev.target.value='';
+}
+
+// กรอง DEVICE + New Receipt แล้วยุบเป็นระดับใบเสร็จ (1 RECPT/INV NO = 1 แถว)
+function parseFinRows(data){
+  var seen={}, out=[];
+  data.forEach(function(r){
+    var ptype=String(r['PRODUCT TYPE']||'').trim().toUpperCase();
+    var status=String(r['STATUS']||'').trim();
+    if(ptype!=='DEVICE')return;
+    if(status!=='New Receipt')return;
+    var inv=String(r['RECPT/INV NO']||'').trim();
+    if(!inv||seen[inv])return;       // ใบเสร็จไม่ซ้ำ
+    seen[inv]=1;
+    var d=finDate(r['RECPT/INV DATE']||r['PROCESS DATE']);
+    var code=String(r['LOCATION CODE']||'').trim();
+    var name=String(r['LOCATION NAME']||'').trim();
+    var pay=String(r['PAY TYPE']||'').trim().toUpperCase();
+    out.push([d,code,name,inv,pay]);
+  });
+  return out;
+}
+
+function uploadFin(rows,src){
+  fetch(FIN_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({action:'finUpload',rows:rows,src:src})})
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(!j.ok){ toast('อัปโหลดไม่สำเร็จ: '+(j.error||''),'err'); document.getElementById('finFileName').textContent=''; return; }
+      document.getElementById('finFileName').textContent=src+' · '+j.inserted+' ใบเสร็จ';
+      toast('เพิ่ม '+j.inserted+' ใบ (แทนที่ '+j.removed+') · '+j.dates.length+' วัน','ok');
+      FIN_MONTH=''; loadFin(true);
+    })
+    .catch(function(e){ toast('อัปโหลดไม่สำเร็จ: '+(e.message||e),'err'); document.getElementById('finFileName').textContent=''; });
+}
+
+/* ============ load ============ */
+function loadFin(force){
+  var hint=document.getElementById('finHint');
+  hint.textContent='กำลังโหลดข้อมูล…'; hint.classList.remove('hidden');
+  jsonp(FIN_URL+'?action=finSummary'+(FIN_MONTH?('&month='+FIN_MONTH):'')).then(function(j){
+    if(!j.ok){ hint.textContent='โหลดไม่สำเร็จ: '+(j.error||''); return; }
+    FIN_MONTHS=j.months||[];
+    if(!FIN_MONTH&&FIN_MONTHS.length){ FIN_MONTH=FIN_MONTHS[FIN_MONTHS.length-1]; fillMonth(); loadFin(true); return; }
+    FIN_SUM=j; fillMonth(); renderFin();
+  }).catch(function(e){ hint.textContent='โหลดไม่สำเร็จ: '+(e.error||e.message||e); });
+  jsonp(FIN_URL+'?action=finBatches').then(function(j){ if(j.ok)FIN_BATCHES=j.batches||[]; }).catch(function(){});
+}
+function finMonthChanged(){ FIN_MONTH=document.getElementById('finMonth').value; loadFin(true); }
+function finMonthStep(s){
+  if(!FIN_MONTHS.length)return;
+  var i=FIN_MONTHS.indexOf(FIN_MONTH); if(i<0)i=FIN_MONTHS.length-1;
+  var n=i+s; if(n<0||n>=FIN_MONTHS.length)return;
+  FIN_MONTH=FIN_MONTHS[n]; document.getElementById('finMonth').value=FIN_MONTH; loadFin(true);
+}
+function fillMonth(){
+  var s=document.getElementById('finMonth');
+  s.innerHTML=FIN_MONTHS.map(function(m){return '<option value="'+m+'">'+monthLabel(m)+'</option>';}).join('');
+  if(FIN_MONTH)s.value=FIN_MONTH;
+  var i=FIN_MONTHS.indexOf(FIN_MONTH);
+  var btns=s.parentNode.querySelectorAll('button');
+  if(btns.length===2){ btns[0].disabled=(i<=0); btns[1].disabled=(i<0||i>=FIN_MONTHS.length-1); }
+}
+
+function toggleFinBatches(){
+  var el=document.getElementById('finBatches');
+  el.classList.toggle('hidden');
+  if(el.classList.contains('hidden'))return;
+  if(!FIN_BATCHES||!FIN_BATCHES.length){ el.innerHTML='<div class="muted">ยังไม่มีไฟล์ที่ import</div>'; return; }
+  el.innerHTML='<table><thead><tr><th>ไฟล์</th><th style="text-align:right">ใบเสร็จ</th><th>ช่วงวันที่</th><th>อัปโหลดเมื่อ</th></tr></thead><tbody>'+
+    FIN_BATCHES.map(function(b){return '<tr><td>'+esc(b.src)+'</td><td style="text-align:right">'+b.rows+'</td><td>'+esc(thDay(b.minD))+' → '+esc(thDay(b.maxD))+'</td><td class="muted">'+esc(b.uploadedAt)+'</td></tr>';}).join('')+'</tbody></table>';
+}
+
+/* ============ render ============ */
+function renderFin(){
+  var hint=document.getElementById('finHint');
+  var out=document.getElementById('finResult');
+  if(!FIN_SUM||!FIN_SUM.total){
+    hint.classList.remove('hidden');
+    hint.innerHTML='ยังไม่มีข้อมูล — กด <b>Import CSV</b> เพื่อเริ่ม<br><span class="muted">กรอง PRODUCT TYPE=DEVICE · STATUS=New Receipt · นับใบเสร็จไม่ซ้ำ (RECPT/INV NO)</span>';
+    out.innerHTML=''; return;
+  }
+  hint.classList.add('hidden');
+
+  var bt=FIN_SUM.byType||{}, total=FIN_SUM.total;
+  var finTot=FIN_TYPES.reduce(function(a,t){return a+(bt[t]||0);},0);
+  var nonFinTot=NONFIN.reduce(function(a,t){return a+(bt[t]||0);},0);
+  var otherTot=total-finTot-nonFinTot; // ประเภทอื่น/ว่าง
+  var rangeTxt=monthLabel(FIN_MONTH)+(FIN_SUM.minD?(' · '+thDay(FIN_SUM.minD)+'–'+thDay(FIN_SUM.maxD)):'');
+  // ลำดับที่แสดงในแถบ/legend (เฉพาะที่มีจริง)
+  var showTypes=['CA','CC','QP','LS','SG','SH'].filter(function(t){return bt[t];});
+  if(otherTot>0)showTypes.push('');
+
+  // ---- Summary Card ----
+  var summary='<div class="card">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+      '<h3 style="margin:0">ภาพรวม</h3><span class="muted">'+esc(rangeTxt)+' · '+total+' ใบเสร็จ (DEVICE)</span>'+
+    '</div>'+
+    '<div class="stats" style="margin-bottom:14px">'+
+      stat(total,'ใบเสร็จทั้งหมด')+
+      stat(nonFinTot+' ('+pct(nonFinTot,total).toFixed(1)+'%)','เงินสด/บัตร (CA+CC+QP)')+
+      statHi(finTot+' ('+pct(finTot,total).toFixed(1)+'%)','Finance (SF+/SG/Spay)')+
+    '</div>'+
+    // Share by type bar
+    '<div class="barrow"><div style="width:120px;flex:0 0 120px;font-size:12px;color:var(--muted)">Share % by type</div>'+
+      '<div class="bartrack">'+
+        showTypes.map(function(t){
+          var n=bt[t]||0; if(!n)return '';
+          return '<div class="barseg" title="'+esc(PAY_LABELS[t]+' '+n)+'" style="width:'+pct(n,total)+'%;background:'+FIN_COLORS[t]+'"></div>';
+        }).join('')+
+      '</div></div>'+
+    '<div class="legend">'+
+      showTypes.map(function(t){
+        return '<span><span class="pill" style="background:'+FIN_COLORS[t]+'"></span>'+esc(PAY_LABELS[t])+' '+(bt[t]||0)+' ('+pct(bt[t]||0,total).toFixed(1)+'%)</span>';
+      }).join('')+
+    '</div>'+
+  '</div>';
+
+  // ---- Daily Finance % (3 types) ----
+  var days=Object.keys(FIN_SUM.byDay||{}).sort();
+  var dailyRows=days.map(function(d){
+    var dd=FIN_SUM.byDay[d]; var dTot=Object.keys(dd).reduce(function(a,k){return a+dd[k];},0);
+    var cells=FIN_TYPES.map(function(t){ var n=dd[t]||0; return '<td style="text-align:right">'+n+'<span class="muted"> ('+pct(n,dTot).toFixed(0)+'%)</span></td>'; }).join('');
+    var fSum=FIN_TYPES.reduce(function(a,t){return a+(dd[t]||0);},0);
+    return '<tr><td>'+esc(thDay(d))+'</td><td style="text-align:right">'+dTot+'</td>'+cells+
+      '<td style="text-align:right;font-weight:700;color:var(--fin)">'+pct(fSum,dTot).toFixed(1)+'%</td></tr>';
+  }).join('');
+  var daily='<div class="card"><h3>Finance รายวัน (% ต่อใบเสร็จ DEVICE)</h3>'+
+    '<table><thead><tr><th>วันที่</th><th style="text-align:right">ใบเสร็จ</th>'+
+      FIN_TYPES.map(function(t){return '<th style="text-align:right">'+esc(PAY_LABELS[t])+'</th>';}).join('')+
+      '<th style="text-align:right">Finance %</th></tr></thead>'+
+    '<tbody>'+dailyRows+'</tbody></table></div>';
+
+  // ---- By Location ----
+  var locs=Object.keys(FIN_SUM.byLoc||{}).map(function(k){return FIN_SUM.byLoc[k];});
+  locs.sort(function(a,b){
+    var fa=FIN_TYPES.reduce(function(x,t){return x+(a.byType[t]||0);},0)/(a.total||1);
+    var fb=FIN_TYPES.reduce(function(x,t){return x+(b.byType[t]||0);},0)/(b.total||1);
+    return fb-fa;
+  });
+  var locRows=locs.map(function(L){
+    var name=finLocName(L.code,L.name);
+    var cells=FIN_TYPES.map(function(t){ var n=L.byType[t]||0; return '<td style="text-align:right">'+n+'<span class="muted"> ('+pct(n,L.total).toFixed(0)+'%)</span></td>'; }).join('');
+    var fSum=FIN_TYPES.reduce(function(a,t){return a+(L.byType[t]||0);},0);
+    return '<tr><td>'+esc(L.code)+'</td><td>'+esc(name)+'</td><td style="text-align:right">'+L.total+'</td>'+cells+
+      '<td style="text-align:right;font-weight:700;color:var(--fin)">'+pct(fSum,L.total).toFixed(1)+'%</td></tr>';
+  }).join('');
+  var finTotAll=FIN_TYPES.reduce(function(a,t){return a+(bt[t]||0);},0);
+  var byLoc='<div class="card"><h3>% Share รายสาขา (เทียบ RECPT/INV NO ของสาขา)</h3>'+
+    '<table><thead><tr><th>Code</th><th>Location</th><th style="text-align:right">ใบเสร็จ</th>'+
+      FIN_TYPES.map(function(t){return '<th style="text-align:right">'+esc(PAY_LABELS[t])+'</th>';}).join('')+
+      '<th style="text-align:right">Finance %</th></tr></thead>'+
+    '<tbody>'+locRows+
+      '<tr style="font-weight:700;border-top:2px solid var(--line)"><td>รวม</td><td></td><td style="text-align:right">'+total+'</td>'+
+        FIN_TYPES.map(function(t){return '<td style="text-align:right">'+(bt[t]||0)+'</td>';}).join('')+
+        '<td style="text-align:right;color:var(--fin)">'+pct(finTotAll,total).toFixed(1)+'%</td></tr>'+
+    '</tbody></table>'+
+    '<div class="muted" style="margin-top:8px">Finance = SF+ (LS) · SG · Spay Later (SH) · นับใบเสร็จไม่ซ้ำ เฉพาะ DEVICE + New Receipt</div>'+
+  '</div>';
+
+  out.innerHTML=summary+daily+byLoc;
+}
+
+function stat(n,l){return '<div class="stat"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
+function statHi(n,l){return '<div class="stat" style="border-color:var(--fin);background:rgba(224,169,61,.08)"><div class="n" style="color:var(--fin)">'+n+'</div><div class="l">'+l+'</div></div>';}
+
+/* ============ boot ============ */
+loadFin(true);
+</script>
+</body>
+</html>
