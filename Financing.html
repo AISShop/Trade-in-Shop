@@ -231,8 +231,9 @@ function parseFinRows(data){
     // ถ้า uid เป็นตัวเลขล้วน (PIN) จะ normalize เป็น username ทีหลัง (ต้องใช้ map ทั้งไฟล์)
     var user=uidRaw.toUpperCase()||String(r['SALE EMPLOYEE NAME']||'').trim()||'(ไม่ระบุ)';
     var ename=String(r['SALE EMPLOYEE NAME']||'').trim();
-    // [date, code, name, invNo, pay, paid, brand, model, qty, user, pin, ename]
-    out.push([d,code,name,no,pay,paid,brand,model,qty,user,pin,ename]);
+    var pt=String(r['PRODUCT TYPE']||'').trim().toUpperCase();  // สำหรับ %ATR (device)
+    // [date, code, name, invNo, pay, paid, brand, model, qty, user, pin, ename, pt]
+    out.push([d,code,name,no,pay,paid,brand,model,qty,user,pin,ename,pt]);
   });
   // สร้าง map PIN -> username จากแถวที่ user เป็น username จริง แล้ว normalize uid ที่เป็นตัวเลข
   var pinToUser={};
@@ -327,6 +328,7 @@ function renderFin(){
       stat(total,'Transaction ทั้งหมด')+
       stat(nonFinTot+' ('+pct(nonFinTot,total).toFixed(1)+'%)','เงินสด/บัตร (CA+CC+QP)')+
       statHi(finTot+' ('+pct(finTot,total).toFixed(1)+'%)','Finance (SF+/SG/Spay/U May+)')+
+      statHi((FIN_SUM.devTotal?pct(FIN_SUM.devFin,FIN_SUM.devTotal).toFixed(1):'0.0')+'%','%ATR (Finance ÷ Device '+((FIN_SUM.devFin||0)+'/'+(FIN_SUM.devTotal||0))+')')+
     '</div>'+
     // Share by transaction
     '<div class="barrow"><div style="width:120px;flex:0 0 120px;font-size:12px;color:var(--muted)">Share % (รายการ)</div>'+
@@ -404,22 +406,24 @@ function renderFin(){
     var cells=FIN_TYPES.map(function(t){ var n=L.byType[t]||0; return '<td style="text-align:right">'+n+'<span class="muted"> ('+pct(n,L.total).toFixed(0)+'%)</span></td>'; }).join('');
     var fSum=FIN_TYPES.reduce(function(a,t){return a+(L.byType[t]||0);},0);
     var fRev=FIN_TYPES.reduce(function(a,t){return a+((L.revByType&&L.revByType[t])||0);},0);
+    var atr=L.devTotal?pct(L.devFin,L.devTotal):0;
     return '<tr><td>'+esc(L.code)+'</td><td>'+esc(name)+'</td><td style="text-align:right">'+L.total+'</td>'+cells+
       '<td style="text-align:right;font-weight:700;color:var(--fin)">'+pct(fSum,L.total).toFixed(1)+'%</td>'+
-      '<td style="text-align:right;color:var(--muted)">'+pct(fRev,L.rev||0).toFixed(1)+'%</td></tr>';
+      '<td style="text-align:right;font-weight:700;color:#8DC63F">'+atr.toFixed(1)+'%<span class="muted" style="font-weight:400"> ('+(L.devFin||0)+'/'+(L.devTotal||0)+')</span></td></tr>';
   }).join('');
   var finTotAll=FIN_TYPES.reduce(function(a,t){return a+(bt[t]||0);},0);
+  var atrAll=FIN_SUM.devTotal?pct(FIN_SUM.devFin,FIN_SUM.devTotal):0;
   var byLocHtml='<div class="card"><h3>% Share รายสาขา (เทียบ Transaction ของสาขา)</h3>'+
-    '<table><thead><tr><th>Code</th><th>Location</th><th style="text-align:right">ใบเสร็จ</th>'+
+    '<table><thead><tr><th>Code</th><th>Location</th><th style="text-align:right">Transaction</th>'+
       FIN_TYPES.map(function(t){return '<th style="text-align:right">'+esc(PAY_LABELS[t])+'</th>';}).join('')+
-      '<th style="text-align:right">Finance %</th><th style="text-align:right">Fin.Rev %</th></tr></thead>'+
+      '<th style="text-align:right">Finance %</th><th style="text-align:right">%ATR (Fin÷Device)</th></tr></thead>'+
     '<tbody>'+locRows+
       '<tr style="font-weight:700;border-top:2px solid var(--line)"><td>รวม</td><td></td><td style="text-align:right">'+total+'</td>'+
         FIN_TYPES.map(function(t){return '<td style="text-align:right">'+(bt[t]||0)+'</td>';}).join('')+
         '<td style="text-align:right;color:var(--fin)">'+pct(finTotAll,total).toFixed(1)+'%</td>'+
-        '<td style="text-align:right;color:var(--muted)">'+pct(finRev,revTot).toFixed(1)+'%</td></tr>'+
+        '<td style="text-align:right;color:#8DC63F">'+atrAll.toFixed(1)+'% ('+(FIN_SUM.devFin||0)+'/'+(FIN_SUM.devTotal||0)+')</td></tr>'+
     '</tbody></table>'+
-    '<div class="muted" style="margin-top:8px">Finance = SF+ (LS) · SG · Spay Later (SH) · U May+ (UM) · นับทุกแถว 9 สาขา · PAID AMT</div>'+
+    '<div class="muted" style="margin-top:8px">Finance = SF+/SG/Spay/U May+ · นับทุกแถว 9 สาขา · %ATR = Finance (ทุก product) ÷ Device transaction</div>'+
   '</div>';
 
   // ---- By Brand (เฉพาะ Finance) ----
@@ -473,25 +477,30 @@ function renderFinByUser(){
   var html='<div class="card"><h3>By User — Finance รายคน (จัดกลุ่มตามสาขา)</h3>'+
     '<table><thead><tr><th>สาขา / พนักงาน</th><th style="text-align:right">ขายรวม</th><th style="text-align:right">Finance</th>'+
       FIN_TYPES.map(function(t){return '<th style="text-align:right">'+esc(PAY_LABELS[t])+'</th>';}).join('')+
-      '<th style="text-align:right">PAID AMT</th></tr></thead><tbody>';
+      '<th style="text-align:right">%ATR</th><th style="text-align:right">PAID AMT</th></tr></thead><tbody>';
   branches.forEach(function(B){
+    var bDevTot=B.users.reduce(function(a,u){return a+(u.devTotal||0);},0);
+    var bDevFin=B.users.reduce(function(a,u){return a+(u.devFin||0);},0);
     html+='<tr style="background:rgba(141,198,63,.08);font-weight:700"><td>'+esc(finLocName(B.code,B.locName))+'</td>'+
       '<td style="text-align:right">'+B.sales+'</td>'+
       '<td style="text-align:right">'+B.total+'</td>'+
       FIN_TYPES.map(function(t){var n=B.users.reduce(function(a,u){return a+(u.byType[t]||0);},0);return '<td style="text-align:right">'+(n||'')+'</td>';}).join('')+
+      '<td style="text-align:right;color:#8DC63F">'+(bDevTot?pct(bDevFin,bDevTot).toFixed(1):'0.0')+'%</td>'+
       '<td style="text-align:right">'+fmtBaht(B.rev)+'</td></tr>';
     // เรียง: มี finance ก่อน (มากไปน้อย) แล้วคนไม่มี finance
     B.users.sort(function(a,b){ if(b.cnt!==a.cnt)return b.cnt-a.cnt; return (b.salesTotal||0)-(a.salesTotal||0); }).forEach(function(u){
       var zero=(u.cnt===0);
       var op=zero?'opacity:.4':'';
+      var uatr=(u.devTotal)?pct(u.devFin,u.devTotal).toFixed(1)+'%':'-';
       html+='<tr style="'+op+'"><td style="padding-left:24px">'+esc(u.user)+'</td>'+
         '<td style="text-align:right;color:var(--muted)">'+(u.salesTotal||0)+'</td>'+
         '<td style="text-align:right">'+(zero?'-':u.cnt)+'</td>'+
-        FIN_TYPES.map(function(t){return '<td style="text-align:right;color:var(--muted)">'+(u.byType[t]||(zero?'':''))+'</td>';}).join('')+
+        FIN_TYPES.map(function(t){return '<td style="text-align:right;color:var(--muted)">'+(u.byType[t]||'')+'</td>';}).join('')+
+        '<td style="text-align:right;color:#8DC63F">'+uatr+'</td>'+
         '<td style="text-align:right">'+(zero?'-':fmtBaht(u.rev))+'</td></tr>';
     });
   });
-  html+='</tbody></table><div class="muted" style="margin-top:8px">แสดงพนักงานทุกคน · คนไม่มี Finance = สีทึบจาง ("-") · เรียงตามจำนวน Finance</div></div>';
+  html+='</tbody></table><div class="muted" style="margin-top:8px">แสดงพนักงานทุกคน · คนไม่มี Finance = สีทึบจาง · %ATR = Finance (ทุก product) ÷ Device transaction</div></div>';
   return html;
 }
 
