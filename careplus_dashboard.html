@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Care Plus %Attach Rate — AIS Area South</title>
+<script>
+window.__libReady={chart:false};
+function loadScriptFallback(urls,onload,key){var i=0;function tryNext(){if(i>=urls.length){if(onload)onload(false);return;}var s=document.createElement('script');s.src=urls[i++];s.onload=function(){if(key)window.__libReady[key]=true;if(onload)onload(true);};s.onerror=function(){tryNext();};document.head.appendChild(s);}tryNext();}
+loadScriptFallback(['https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js','https://unpkg.com/chart.js@4.4.1/dist/chart.umd.min.js','https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'],function(ok){if(ok){loadScriptFallback(['https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js','https://unpkg.com/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js'],function(){if(window.__afterLibs)window.__afterLibs();},'datalabels');}else{if(window.__afterLibs)window.__afterLibs();}},'chart');
+loadScriptFallback(['https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js','https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'],null,'xlsx');
+</script>
+<style>
+  @font-face{font-family:'DB Heavent';src:url('DB_Heavent_Med_Cond_v3_2.ttf') format('truetype');font-weight:400}
+  @font-face{font-family:'DB Heavent';src:url('DBHeavent-BlackCond.ttf') format('truetype');font-weight:800}
+  *{font-family:'DB Heavent','Sarabun','Segoe UI',system-ui,sans-serif !important;box-sizing:border-box}
+  :root{--green:#0A5C36;--lime:#8DC63F;--ink:#0f1722;--panel:#16202b;--panel2:#1d2a37;--line:#2a3a48;--muted:#8aa0b2;--txt:#e8eef3;--danger:#e0533d;--ok:#3dba6f}
+  body{margin:0;background:var(--ink);color:var(--txt);font-size:18px}
+  header{background:linear-gradient(135deg,var(--green),#0d7344);padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+  header .logo{width:34px;height:34px;border-radius:8px;background:var(--lime);display:grid;place-items:center;font-weight:800;color:var(--green)}
+  header h1{margin:0;font-size:20px;font-weight:800}
+  .wrap{max-width:100%;margin:0 auto;padding:14px 18px}
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .btn{background:var(--lime);color:#08331e;border:0;border-radius:9px;padding:9px 14px;cursor:pointer;font-weight:700;font-size:14px}
+  .btn.ghost{background:var(--panel);color:var(--txt);border:1px solid var(--line)}
+  select{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 12px;color:var(--txt);font-size:14px;font-family:inherit}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  .card h3{margin:0 0 12px;font-size:19px}
+  .stats{display:flex;gap:12px;flex-wrap:wrap}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 18px;min-width:130px;flex:1}
+  .stat .n{font-size:32px;font-weight:800;line-height:1}
+  .stat .l{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:5px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:6px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:15px}
+  th{background:var(--panel2);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;padding:8px 12px}
+  td.num,th.num{text-align:right}
+  .muted{color:var(--muted);font-size:13px}
+  .shopname{font-weight:800;font-size:14px;display:inline}
+  .bar{height:14px;background:#0e1620;border-radius:7px;overflow:hidden;min-width:60px;margin-top:3px}
+  .fill{height:100%;border-radius:7px;background:linear-gradient(90deg,var(--lime),#5cd28a);transition:width .3s}
+  .shopcode{font-size:12px;font-weight:700;color:#8DC63F;display:inline;margin-left:8px}
+  .chartwrap{position:relative;height:340px}
+  .seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{background:transparent;color:var(--muted);border:0;padding:8px 16px;cursor:pointer;font-weight:700;font-size:14px}
+  .seg button.active{background:var(--lime);color:#08331e}
+  .atrbig{font-size:30px;font-weight:800;color:var(--lime)}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;color:#fff;padding:10px 18px;border-radius:10px;opacity:0;transition:.3s;pointer-events:none;z-index:99;font-size:14px}
+  #toast.show{opacity:.95}#toast.err{background:var(--danger)}#toast.ok{background:var(--ok)}
+  @media(max-width:640px){header{position:static}header h1{font-size:15px}body{font-size:15px}.wrap{padding:9px}.card{padding:12px}.chartwrap{height:260px}.stat .n{font-size:24px}}
+</style>
+</head>
+<body>
+<header><div class="logo">AIS</div><h1>Care Plus %Attach Rate — Area South</h1></header>
+<div class="wrap">
+  <div class="toolbar">
+    <div style="display:flex;align-items:center;gap:4px">
+      <button class="btn ghost" onclick="monthStep(-1)" style="padding:6px 10px">&lsaquo;</button>
+      <select id="periodSel" onchange="periodChanged()" style="min-width:150px"></select>
+      <button class="btn ghost" onclick="monthStep(1)" style="padding:6px 10px">&rsaquo;</button>
+    </div>
+    <div class="seg" id="termSeg">
+      <button data-term="all" class="active" onclick="setTerm('all')">ทั้งหมด</button>
+      <button data-term="monthly" onclick="setTerm('monthly')">รายเดือน</button>
+      <button data-term="yearly" onclick="setTerm('yearly')">รายปี</button>
+    </div>
+    <button class="btn ghost" onclick="loadData(true)">&#8635; รีเฟรช</button>
+    <button class="btn ghost" onclick="exportXlsx()">&#8681; Export</button>
+    <span id="periodInfo" class="muted"></span>
+  </div>
+
+  <div class="card">
+    <div class="stats">
+      <div class="stat"><div class="n atrbig" id="kpiAtr">&mdash;</div><div class="l">%Attach Rate (Area)</div></div>
+      <div class="stat"><div class="n" id="kpiOrder">&mdash;</div><div class="l">Care Plus Orders</div></div>
+      <div class="stat"><div class="n" id="kpiDevice">&mdash;</div><div class="l">Device Qty (ตัวหาร)</div></div>
+      <div class="stat"><div class="n" id="kpiRev">&mdash;</div><div class="l">Revenue (บาท)</div></div>
+    </div>
+    <div class="muted" style="margin-top:8px">%Attach Rate = Care Plus Orders ÷ Device Qty · <span id="termInfo"></span></div>
+  </div>
+
+  <div class="card">
+    <h3>%Attach Rate รายวัน (Daily) — ทั้ง Area · เทียบเดือนก่อน <span style="font-size:12px;color:#e0533d;font-weight:600">(🔴 = ต่ำกว่าเดือนก่อน)</span></h3>
+    <div class="chartwrap"><canvas id="atrChart"></canvas></div>
+  </div>
+
+  <div class="card">
+    <h3 id="tblTitle">%Attach Rate รายสาขา</h3>
+    <div style="overflow-x:auto">
+    <table><thead><tr><th>สาขา</th><th class="num">Care Plus</th><th class="num">Device</th><th class="num">%ATR</th><th class="num">รายเดือน</th><th class="num">%ด/ด</th><th class="num">รายปี</th><th class="num">%ป/ป</th></tr></thead>
+      <tbody id="locBody"></tbody></table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>%Attach Rate แยกตาม Brand (Care Plus ÷ Device ของ Brand)</h3>
+    <div style="overflow-x:auto">
+    <table><thead><tr><th>Brand</th><th class="num">Care Plus</th><th class="num">Device</th><th class="num">%ATR</th></tr></thead>
+      <tbody id="brandBody"></tbody></table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Care Plus รายวัน (Daily) — แยกทีละสาขา</h3>
+    <div id="byShopGrid"></div>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+var TH_MON=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+var SHOPS={'Shop Central Surat Thani':'1204','Shop Central Hat Yai':'1205','Shop Central Phuket Floresta':'1213','Shop Central Nakhon Si Thammarat':'1215','Shop Central Samui':'1216','Shop Serenade Club Central Festival Hat Yai':'1245','Shop Hatyai Village':'1252','Shop Central Phuket Festival':'1255','Shop Robinson Trang':'1259'};
+var BRANDS=['Apple','Samsung','Oppo','Xiaomi','Vivo'];
+var CP_URL='https://script.google.com/macros/s/AKfycbxnFHnV6xFxZgl3JncF3VTf10Lmm6ewrEjADfcKRpKNIbpRzyYG0CWGIko9ZLmgNCdmDA/exec';
+var USE_LIVE=true;
+var DATA={}, CUR_MONTH=null, LIVE_MONTHS=null, _chart=null, _initTries=0, TERM='all';
+
+function jsonp(url){return new Promise(function(resolve,reject){var cb='__cp_cb_'+Math.random().toString(36).slice(2);var t=setTimeout(function(){cleanup();reject(new Error('timeout'));},25000);function cleanup(){clearTimeout(t);try{delete window[cb];}catch(e){window[cb]=undefined;}if(s&&s.parentNode)s.parentNode.removeChild(s);}window[cb]=function(data){cleanup();resolve(data);};var s=document.createElement('script');s.src=url+(url.indexOf('?')<0?'?':'&')+'cb='+cb;s.onerror=function(){cleanup();reject(new Error('network'));};document.head.appendChild(s);});}
+function loadBundle(month){return jsonp(CP_URL+'?action=careplusBundle&month='+month).then(function(j){if(!j||!j.ok)throw new Error('bad');if(j.cur){DATA[j.cur.month]={byShop:j.cur.byShop||{},device:j.cur.device||{total:0,byBrand:{},byShop:{}}};}if(j.prev){DATA[j.prev.month]={byShop:j.prev.byShop||{},device:j.prev.device||{total:0,byBrand:{},byShop:{}}};}if(j.months&&j.months.length)LIVE_MONTHS=j.months;return j;});}
+function loadOne(month){return jsonp(CP_URL+'?action=careplusData&month='+month).then(function(j){if(!j||!j.ok)throw new Error('bad');DATA[j.month||month]={byShop:j.byShop||{},device:j.device||{total:0,byBrand:{},byShop:{}}};if(j.months&&j.months.length)LIVE_MONTHS=j.months;return j;});}
+
+function prevMonthKey(ym){var a=ym.split('-');var y=+a[0],m=+a[1];m--;if(m<1){m=12;y--;}return y+'-'+('0'+m).slice(-2);}
+function daysInMonth(y,m){return new Date(y,m,0).getDate();}
+function monthInfo(ym){var a=ym.split('-');var y=+a[0],m=+a[1];var dim=daysInMonth(y,m);var now=new Date();var curYM=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');var todayD=(ym===curYM)?now.getDate():dim;return {y:y,m:m,dim:dim,todayD:todayD};}
+function monthLabel(ym){var a=ym.split('-');return (TH_MON[(+a[1])-1]||a[1])+' '+a[0];}
+
+// นับ order ตาม term filter
+function shopOrder(sd,term){ if(!sd)return 0; if(term==='monthly')return sd.monthly||0; if(term==='yearly')return sd.yearly||0; return sd.order||0; }
+function areaOrders(md,term){ var t=0; Object.keys(md.byShop).forEach(function(s){ t+=shopOrder(md.byShop[s],term); }); return t; }
+
+function setTerm(t){ TERM=t; document.querySelectorAll('#termSeg button').forEach(function(b){ b.classList.toggle('active',b.dataset.term===t); }); render(); }
+function periodChanged(){ CUR_MONTH=document.getElementById('periodSel').value; ensureMonth(CUR_MONTH); }
+function monthStep(delta){var months=availableMonths();var i=months.indexOf(CUR_MONTH);i+=(-delta);if(i<0)i=0;if(i>=months.length)i=months.length-1;CUR_MONTH=months[i];document.getElementById('periodSel').value=CUR_MONTH;ensureMonth(CUR_MONTH);}
+function loadData(){if(!USE_LIVE){render();return;}toast('กำลังโหลด…','');loadBundle(CUR_MONTH).then(function(){fillPeriods();render();toast('อัปเดตแล้ว','ok');}).catch(function(){toast('โหลดไม่สำเร็จ','err');});}
+function availableMonths(){if(USE_LIVE&&LIVE_MONTHS&&LIVE_MONTHS.length)return LIVE_MONTHS.slice();return Object.keys(DATA).length?Object.keys(DATA).sort().reverse():['2026-08'];}
+function ensureMonth(m){var pm=prevMonthKey(m);if(DATA[m]&&DATA[pm]){render();return;}toast('กำลังโหลด '+monthLabel(m)+'…','');loadBundle(m).then(function(){render();}).catch(function(){loadOne(m).then(function(){render();}).catch(function(){render();});});}
+function fillPeriods(){var months=availableMonths();var sel=document.getElementById('periodSel');sel.innerHTML=months.map(function(m){return '<option value="'+m+'">'+monthLabel(m)+'</option>';}).join('');if(!CUR_MONTH||months.indexOf(CUR_MONTH)<0)CUR_MONTH=months[0];sel.value=CUR_MONTH;}
+
+// หาช่วงวันที่มีข้อมูลจริง (Care Plus orders)
+function dateRangeText(md){
+  var min='',max='';
+  Object.keys(md.byShop||{}).forEach(function(s){ var bd=md.byShop[s].byDay||{};
+    Object.keys(bd).forEach(function(dt){ if(!min||dt<min)min=dt; if(!max||dt>max)max=dt; });
+  });
+  if(!min||!max)return '';
+  var d1=+min.slice(8,10), d2=+max.slice(8,10);
+  return ' · ข้อมูล '+d1+'–'+d2+' '+TH_MON[+min.slice(5,7)-1];
+}
+function render(){
+  var md=DATA[CUR_MONTH]; if(!md)return;
+  var mi=monthInfo(CUR_MONTH);
+  var orders=areaOrders(md,TERM);
+  var device=md.device?md.device.total:0;
+  var atr=device>0?(orders/device*100):0;
+  var rev=0; Object.keys(md.byShop).forEach(function(s){ var B=md.byShop[s]; rev+=(TERM==='monthly'?(B.revM||0):(TERM==='yearly'?(B.revY||0):(B.rev||0))); });
+  document.getElementById('kpiAtr').textContent=atr.toFixed(1)+'%';
+  document.getElementById('kpiOrder').textContent=orders.toLocaleString();
+  document.getElementById('kpiDevice').textContent=device.toLocaleString();
+  document.getElementById('kpiRev').textContent=Math.round(rev).toLocaleString();
+  document.getElementById('termInfo').textContent=(TERM==='all'?'ทั้งหมด':(TERM==='monthly'?'เฉพาะรายเดือน (48M)':'เฉพาะรายปี (12M)'));
+  document.getElementById('periodInfo').textContent='· '+monthLabel(CUR_MONTH)+dateRangeText(md);
+  drawAtrChart(md,mi);
+  renderByLocation(md);
+  renderByBrand(md);
+  drawByShopChart(md,mi);
+}
+
+function dayOrders(md,dim,term){
+  var byD={};
+  Object.keys(md.byShop).forEach(function(s){ var sd=md.byShop[s];
+    var bd=sd.byDay||{};
+    Object.keys(bd).forEach(function(dt){ var dd=+dt.slice(8,10); if(dd)byD[dd]=(byD[dd]||0)+bd[dt]; });
+  });
+  var arr=[]; for(var d=1;d<=dim;d++)arr.push(byD[d]!=null?byD[d]:null);
+  return arr;
+}
+// %ATR รายวัน = order วันนั้น ÷ device วันนั้น × 100 (ตาม term filter)
+function dayAtr(md,dim){
+  var ord={}, devByD=(md.device&&md.device.byDay)?md.device.byDay:{};
+  var dayKey=(TERM==='monthly'?'byDayM':(TERM==='yearly'?'byDayY':'byDay'));
+  Object.keys(md.byShop).forEach(function(s){ var bd=md.byShop[s][dayKey]||{};
+    Object.keys(bd).forEach(function(dt){ var dd=+dt.slice(8,10); if(dd)ord[dd]=(ord[dd]||0)+bd[dt]; });
+  });
+  var dev={}; Object.keys(devByD).forEach(function(dt){ var dd=+dt.slice(8,10); if(dd)dev[dd]=(dev[dd]||0)+devByD[dt]; });
+  var arr=[]; for(var d=1;d<=dim;d++){ var o=ord[d]||0,dv=dev[d]||0; arr.push(dv>0?+(o/dv*100).toFixed(1):(o>0?null:null)); }
+  return arr;
+}
+function drawAtrChart(md,mi){
+  if(!window.Chart)return;
+  var labels=[]; for(var d=1;d<=mi.dim;d++)labels.push(String(d));
+  var cur=dayAtr(md,mi.dim);
+  for(var i=mi.todayD;i<mi.dim;i++)cur[i]=null;
+  var pmKey=prevMonthKey(CUR_MONTH);
+  var prev=DATA[pmKey]?dayAtr(DATA[pmKey],mi.dim):[];
+  var hasPrev=prev.some(function(x){return x!=null&&x>0;});
+  Chart.defaults.font.family="'DB Heavent','Sarabun','Segoe UI',sans-serif";Chart.defaults.font.size=15;Chart.defaults.color='#8aa0b2';
+  if(window.ChartDataLabels&&!Chart._cpDL){Chart.register(ChartDataLabels);Chart._cpDL=true;}
+  var cv=document.getElementById('atrChart');var ctx=cv.getContext('2d');
+  if(_chart)_chart.destroy();
+  var grad=ctx.createLinearGradient(0,0,0,340);grad.addColorStop(0,'rgba(141,198,63,0.28)');grad.addColorStop(1,'rgba(141,198,63,0.02)');
+  function isLower(idx){var c=cur[idx],p=prev[idx];return(c!=null&&p!=null&&c<p);}
+  var ds=[];
+  if(hasPrev)ds.push({label:'เดือนก่อน ('+monthLabel(pmKey)+')',data:prev,borderColor:'#7c8b99',borderWidth:2,borderDash:[6,4],fill:false,tension:0.4,cubicInterpolationMode:'monotone',pointRadius:0,pointHoverRadius:5,spanGaps:true,order:2,datalabels:{display:false}});
+  ds.push({label:'เดือนนี้ ('+monthLabel(CUR_MONTH)+')',data:cur,borderColor:'#8DC63F',borderWidth:4,backgroundColor:grad,fill:true,tension:0.4,cubicInterpolationMode:'monotone',pointBackgroundColor:function(c){return isLower(c.dataIndex)?'#e0533d':'#8DC63F';},pointBorderColor:'#0f1722',pointBorderWidth:1.5,pointRadius:function(c){return c.raw!=null?(isLower(c.dataIndex)?5:4):0;},pointHoverRadius:7,spanGaps:false,order:1,datalabels:{display:function(c){return c.dataset.data[c.dataIndex]!=null;},anchor:'end',align:'top',offset:6,clamp:true,clip:false,color:function(c){return isLower(c.dataIndex)?'#fff':'#efffd6';},backgroundColor:function(c){return isLower(c.dataIndex)?'rgba(224,60,45,.95)':'rgba(10,92,54,.92)';},borderRadius:4,padding:{top:3,bottom:3,left:5,right:5},font:{size:14,weight:'bold'},formatter:function(v){return v==null?'':v+'%';}}});
+  _chart=new Chart(cv,{type:'line',data:{labels:labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22,right:14}},interaction:{mode:'index',intersect:false},plugins:{legend:{display:true,position:'top',labels:{usePointStyle:true,pointStyle:'line',font:{size:13},padding:12}},tooltip:{callbacks:{title:function(it){return 'วันที่ '+it[0].label+' '+TH_MON[mi.m-1];},label:function(c){return ' '+c.dataset.label+': '+(c.raw==null?'—':c.raw+'%');}}}},scales:{x:{ticks:{maxRotation:0,autoSkip:false,font:{size:11}},grid:{display:false},title:{display:true,text:'วันที่ ('+monthLabel(CUR_MONTH)+')',font:{size:12}}},y:{beginAtZero:true,grid:{color:'#22303d'},ticks:{callback:function(v){return v+'%';}},title:{display:true,text:'%Attach Rate รายวัน',font:{size:12}}}}}});
+}
+
+function shopLabel(shop){var code=SHOPS[shop]||'';return '<div class="shopname">'+shop+'</div>'+(code?'<div class="shopcode">'+code+'</div>':'');}
+function atrColor(p,pMax,pMin){if(pMax===pMin)return '#8DC63F';var t=(p-pMin)/(pMax-pMin);var r,g,b;if(t<0.5){var u=t/0.5;r=224;g=Math.round(83+(169-83)*u);b=61;}else{var u2=(t-0.5)/0.5;r=Math.round(224+(141-224)*u2);g=Math.round(169+(198-169)*u2);b=Math.round(61+(63-61)*u2);}return 'rgb('+r+','+g+','+b+')';}
+function renderByLocation(md){
+  document.getElementById('tblTitle').textContent='%Attach Rate รายสาขา ('+monthLabel(CUR_MONTH)+')';
+  var dev=md.device||{byShop:{}};
+  var rows=Object.keys(SHOPS).map(function(s){
+    var sd=md.byShop[s]; var order=shopOrder(sd,TERM);
+    var dq=(dev.byShop&&dev.byShop[SHOPS[s]])?dev.byShop[SHOPS[s]].total:0;
+    return {shop:s,order:order,device:dq,atr:dq>0?(order/dq*100):0,monthly:sd?sd.monthly:0,yearly:sd?sd.yearly:0};
+  }).sort(function(a,b){return b.atr-a.atr;});
+  var atrs=rows.map(function(r){return r.atr;});
+  var pMax=Math.max.apply(null,atrs.concat([0.01])),pMin=Math.min.apply(null,atrs);
+  var html='';
+  rows.forEach(function(r){
+    var col=atrColor(r.atr,pMax,pMin);
+    var mPct=r.device>0?(r.monthly/r.device*100):0;
+    var yPct=r.device>0?(r.yearly/r.device*100):0;
+    var barW=Math.min(100,r.atr);
+    html+='<tr><td>'+shopLabel(r.shop)+'</td>'+
+      '<td class="num" style="font-weight:800;color:#8DC63F">'+r.order+'</td>'+
+      '<td class="num">'+r.device+'</td>'+
+      '<td style="min-width:110px"><div style="display:flex;align-items:center;gap:8px;justify-content:flex-end"><span style="font-weight:800;color:'+col+';font-size:16px">'+r.atr.toFixed(1)+'%</span></div><div class="bar"><div class="fill" style="width:'+barW+'%;background:linear-gradient(90deg,'+col+',#5cd28a)"></div></div></td>'+
+      '<td class="num">'+r.monthly+'</td>'+
+      '<td class="num" style="color:#8aa0b2">'+mPct.toFixed(1)+'%</td>'+
+      '<td class="num">'+r.yearly+'</td>'+
+      '<td class="num" style="color:#8aa0b2">'+yPct.toFixed(1)+'%</td></tr>';
+  });
+  var totOrder=areaOrders(md,TERM),totDev=dev.total||0;
+  var totM=0,totY=0; rows.forEach(function(r){totM+=r.monthly;totY+=r.yearly;});
+  html+='<tr style="background:rgba(141,198,63,.08)"><td style="font-weight:800">รวม Area</td>'+
+    '<td class="num" style="font-weight:800;color:#8DC63F">'+totOrder+'</td><td class="num" style="font-weight:800">'+totDev+'</td>'+
+    '<td class="num" style="font-weight:800;color:#8DC63F;font-size:16px">'+(totDev>0?(totOrder/totDev*100).toFixed(1):'0')+'%</td>'+
+    '<td class="num" style="font-weight:800">'+totM+'</td>'+
+    '<td class="num" style="font-weight:800;color:#8aa0b2">'+(totDev>0?(totM/totDev*100).toFixed(1):'0')+'%</td>'+
+    '<td class="num" style="font-weight:800">'+totY+'</td>'+
+    '<td class="num" style="font-weight:800;color:#8aa0b2">'+(totDev>0?(totY/totDev*100).toFixed(1):'0')+'%</td></tr>';
+  document.getElementById('locBody').innerHTML=html;
+}
+function renderByBrand(md){
+  var dev=md.device||{byBrand:{}};
+  // นับ care plus ต่อ brand (ตาม term filter)
+  var cpBrand={}; Object.keys(md.byShop).forEach(function(s){ var bb=md.byShop[s].byBrand||{}; Object.keys(bb).forEach(function(b){ cpBrand[b]=(cpBrand[b]||0)+bb[b]; }); });
+  // รวม brand ทั้งหมดที่มีข้อมูลจริง (จาก Care Plus + Device) — ไม่จำกัดแค่ 5 ตัว
+  var allBrands={}; Object.keys(cpBrand).forEach(function(b){allBrands[b]=1;}); Object.keys(dev.byBrand||{}).forEach(function(b){allBrands[b]=1;});
+  var rows=Object.keys(allBrands).map(function(b){
+    var order=cpBrand[b]||0; var dq=(dev.byBrand&&dev.byBrand[b])||0;
+    return {brand:b,order:order,device:dq,atr:dq>0?(order/dq*100):0};
+  }).filter(function(r){return r.order>0||r.device>0;}).sort(function(a,b){return b.device-a.device;});
+  var atrs=rows.map(function(r){return r.atr;});
+  var pMax=Math.max.apply(null,atrs.concat([0.01])),pMin=Math.min.apply(null,atrs);
+  var html='';
+  rows.forEach(function(r){
+    var col=atrColor(r.atr,pMax,pMin);
+    html+='<tr><td style="font-weight:800">'+r.brand+'</td>'+
+      '<td class="num" style="color:#8DC63F;font-weight:700">'+r.order+'</td>'+
+      '<td class="num">'+r.device+'</td>'+
+      '<td class="num" style="font-weight:800;color:'+col+';font-size:16px">'+r.atr.toFixed(1)+'%</td></tr>';
+  });
+  document.getElementById('brandBody').innerHTML=html||'<tr><td colspan="4" class="muted">ไม่มีข้อมูล</td></tr>';
+}
+
+var SHOP_COLORS=['#8DC63F','#4FC3F7','#FF8A65','#BA68C8','#FFD54F','#4DB6AC','#F06292','#A1887F','#90A4AE'];
+var _shopCharts=[];
+function shopDailyArr(md,shop,dim){var bd=(md&&md.byShop[shop])?(md.byShop[shop].byDay||{}):{};var byD={};Object.keys(bd).forEach(function(dt){var dd=+dt.slice(8,10);if(dd)byD[dd]=bd[dt];});var arr=[];for(var d=1;d<=dim;d++)arr.push(byD[d]!=null?byD[d]:null);return arr;}
+// device รายวันของสาขา (จาก device.byShop[code].byDay)
+function shopDeviceArr(md,code,dim){var dev=md.device&&md.device.byShop&&md.device.byShop[code]?(md.device.byShop[code].byDay||{}):{};var byD={};Object.keys(dev).forEach(function(dt){var dd=+dt.slice(8,10);if(dd)byD[dd]=dev[dt];});var arr=[];for(var d=1;d<=dim;d++)arr.push(byD[d]||0);return arr;}
+function drawByShopChart(md,mi){
+  if(!window.Chart)return;
+  var grid=document.getElementById('byShopGrid');if(!grid)return;
+  _shopCharts.forEach(function(c){try{c.destroy();}catch(e){}});_shopCharts=[];grid.innerHTML='';
+  var labels=[];for(var d=1;d<=mi.dim;d++)labels.push(String(d));
+  var shops=Object.keys(SHOPS).filter(function(s){return md.byShop[s];}).sort(function(a,b){return (md.byShop[b].order||0)-(md.byShop[a].order||0);});
+  shops.forEach(function(s,i){
+    var col=SHOP_COLORS[i%SHOP_COLORS.length];
+    var data=shopDailyArr(md,s,mi.dim);            // order รายวัน
+    var devArr=shopDeviceArr(md,SHOPS[s],mi.dim);  // device รายวัน
+    for(var k=mi.todayD;k<mi.dim;k++)data[k]=null;
+    var tot=md.byShop[s].order||0;
+    var devTot=(md.device&&md.device.byShop&&md.device.byShop[SHOPS[s]])?md.device.byShop[SHOPS[s]].total:0;
+    var atrTot=devTot>0?(tot/devTot*100).toFixed(1):'0';
+    var row=document.createElement('div');row.style.cssText='margin-bottom:10px;padding:8px 10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px';
+    var head=document.createElement('div');head.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:4px';
+    head.innerHTML='<span style="font-weight:800;font-size:14px;color:'+col+'">'+s.replace('Shop ','')+' <span style="color:var(--muted);font-weight:600;font-size:12px">'+(SHOPS[s]||'')+'</span></span><span style="font-weight:800;font-size:14px;color:'+col+'">'+atrTot+'% · '+tot+' orders / '+devTot+' device</span>';
+    row.appendChild(head);
+    var wrap=document.createElement('div');wrap.style.cssText='height:150px;position:relative';var cv=document.createElement('canvas');wrap.appendChild(cv);row.appendChild(wrap);grid.appendChild(row);
+    try{
+    var grad=cv.getContext('2d').createLinearGradient(0,0,0,150);grad.addColorStop(0,col+'55');grad.addColorStop(1,col+'08');
+    var ch=new Chart(cv,{type:'line',data:{labels:labels,datasets:[{data:data,borderColor:col,backgroundColor:grad,borderWidth:2.5,fill:true,tension:0.35,cubicInterpolationMode:'monotone',pointRadius:0,pointHoverRadius:5,spanGaps:false,
+      datalabels:{display:function(c){return c.dataset.data[c.dataIndex]!=null&&c.dataset.data[c.dataIndex]>0;},anchor:'end',align:'top',offset:3,
+        color:'#fff',backgroundColor:'rgba(15,23,34,.78)',borderRadius:3,padding:{top:1,bottom:1,left:3,right:3},font:{size:12,weight:'bold'},
+        formatter:function(v,c){ if(v==null||v===0)return ''; var dv=devArr[c.dataIndex]||0; return dv>0?(v/dv*100).toFixed(0)+'%':String(v); }}}]},
+      options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:20,right:8}},interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{title:function(it){return 'วันที่ '+it[0].label;},label:function(c){var dv=devArr[c.dataIndex]||0;var o=c.raw||0;var p=dv>0?(o/dv*100).toFixed(1)+'%':'—';return ' '+o+' orders / '+dv+' device = '+p;}}}},
+      scales:{x:{ticks:{maxRotation:0,autoSkip:false,font:{size:8}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{size:9},maxTicksLimit:4},grid:{color:'#22303d'}}}}});
+    _shopCharts.push(ch);
+    }catch(e){}
+  });
+}
+
+function exportXlsx(){
+  if(typeof XLSX==='undefined'){toast('Excel ยังไม่พร้อม','err');return;}
+  var md=DATA[CUR_MONTH];var dev=md.device||{byShop:{},byBrand:{}};
+  var wb=XLSX.utils.book_new();
+  var s1=[['Care Plus %ATR — '+monthLabel(CUR_MONTH)+' ('+TERM+')'],[],['สาขา','Code','Care Plus','Device','%ATR','รายเดือน','รายปี']];
+  Object.keys(SHOPS).forEach(function(s){var sd=md.byShop[s];var order=shopOrder(sd,TERM);var dq=(dev.byShop&&dev.byShop[SHOPS[s]])?dev.byShop[SHOPS[s]].total:0;s1.push([s,SHOPS[s],order,dq,dq>0?(order/dq*100).toFixed(1)+'%':'0%',sd?sd.monthly:0,sd?sd.yearly:0]);});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s1),'By Location');
+  var s2=[['Brand','Care Plus','Device','%ATR']];
+  var cpB={};Object.keys(md.byShop).forEach(function(s){var bb=md.byShop[s].byBrand||{};Object.keys(bb).forEach(function(b){cpB[b]=(cpB[b]||0)+bb[b];});});
+  BRANDS.forEach(function(b){var o=cpB[b]||0;var dq=(dev.byBrand&&dev.byBrand[b])||0;s2.push([b,o,dq,dq>0?(o/dq*100).toFixed(1)+'%':'0%']);});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s2),'By Brand');
+  XLSX.writeFile(wb,'CarePlus_'+CUR_MONTH+'.xlsx');toast('Export สำเร็จ','ok');
+}
+
+function toast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='show'+(type?' '+type:'');setTimeout(function(){t.className='';},2200);}
+function showLoading(on){var el=document.getElementById('loadingOverlay');if(!el){el=document.createElement('div');el.id='loadingOverlay';el.style.cssText='position:fixed;inset:0;background:rgba(15,23,34,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#8DC63F;font-size:18px;gap:14px';el.innerHTML='<div style="width:44px;height:44px;border:4px solid #2a3a48;border-top-color:#8DC63F;border-radius:50%;animation:cpspin 1s linear infinite"></div><div>กำลังโหลด Care Plus…</div>';var st=document.createElement('style');st.textContent='@keyframes cpspin{to{transform:rotate(360deg)}}';document.head.appendChild(st);document.body.appendChild(el);}el.style.display=on?'flex':'none';}
+window.__afterLibs=function(){if(window.Chart&&CUR_MONTH&&DATA[CUR_MONTH]&&LIVE_MONTHS){try{render();}catch(e){}}};
+var _cpTries=0;var _cpPoll=setInterval(function(){_cpTries++;if(window.Chart&&CUR_MONTH&&DATA[CUR_MONTH]&&LIVE_MONTHS&&!_chart){try{render();}catch(e){}}if(_chart||_cpTries>40)clearInterval(_cpPoll);},500);
+
+function init(){var now=new Date();var curYM=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');CUR_MONTH=(curYM>='2026-08')?curYM:'2026-08';showLoading(true);tryLoad();}
+function tryLoad(){_initTries++;function ok(){showLoading(false);if(!LIVE_MONTHS||!LIVE_MONTHS.length)LIVE_MONTHS=[CUR_MONTH];if(LIVE_MONTHS.indexOf(CUR_MONTH)<0)CUR_MONTH=LIVE_MONTHS[0];fillPeriods();render();toast('พร้อมแล้ว','ok');}loadBundle(CUR_MONTH).then(ok).catch(function(){loadOne(CUR_MONTH).then(function(){ok();var pm=prevMonthKey(CUR_MONTH);if(!DATA[pm])loadOne(pm).then(function(){render();}).catch(function(){});}).catch(function(){if(_initTries<3){toast('กำลังลองใหม่… ('+_initTries+'/3)','');setTimeout(tryLoad,2000);}else{showLoading(false);toast('ต่อ backend ไม่ได้','err');DATA[CUR_MONTH]={byShop:{},device:{total:0,byBrand:{},byShop:{}}};LIVE_MONTHS=[CUR_MONTH];fillPeriods();render();}});});}
+init();
+</script>
+</body>
+</html>
