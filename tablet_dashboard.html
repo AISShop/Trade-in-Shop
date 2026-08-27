@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tablet %Achieve — AIS Area South</title>
+<script>
+window.__libReady={chart:false};
+function loadScriptFallback(urls,onload,key){var i=0;function tryNext(){if(i>=urls.length){if(onload)onload(false);return;}var s=document.createElement('script');s.src=urls[i++];s.onload=function(){if(key)window.__libReady[key]=true;if(onload)onload(true);};s.onerror=function(){tryNext();};document.head.appendChild(s);}tryNext();}
+loadScriptFallback(['https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js','https://unpkg.com/chart.js@4.4.1/dist/chart.umd.min.js','https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'],function(ok){if(ok){loadScriptFallback(['https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js','https://unpkg.com/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js'],function(){if(window.__afterLibs)window.__afterLibs();},'datalabels');}else{if(window.__afterLibs)window.__afterLibs();}},'chart');
+loadScriptFallback(['https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js','https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'],null,'xlsx');
+</script>
+<style>
+  @font-face{font-family:'DB Heavent';src:url('DB_Heavent_Med_Cond_v3_2.ttf') format('truetype');font-weight:400}
+  @font-face{font-family:'DB Heavent';src:url('DBHeavent-BlackCond.ttf') format('truetype');font-weight:800}
+  *{font-family:'DB Heavent','Sarabun','Segoe UI',system-ui,sans-serif !important;box-sizing:border-box}
+  :root{--green:#0A5C36;--lime:#8DC63F;--ink:#0f1722;--panel:#16202b;--panel2:#1d2a37;--line:#2a3a48;--muted:#8aa0b2;--txt:#e8eef3;--danger:#e0533d;--ok:#3dba6f;--grey:#5a6b7a}
+  body{margin:0;background:var(--ink);color:var(--txt);font-size:18px}
+  header{background:linear-gradient(135deg,var(--green),#0d7344);padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+  header .logo{width:34px;height:34px;border-radius:8px;background:var(--lime);display:grid;place-items:center;font-weight:800;color:var(--green)}
+  header h1{margin:0;font-size:20px;font-weight:800}
+  .wrap{max-width:100%;margin:0 auto;padding:14px 18px}
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .btn{background:var(--lime);color:#08331e;border:0;border-radius:9px;padding:9px 14px;cursor:pointer;font-weight:700;font-size:14px}
+  .btn.ghost{background:var(--panel);color:var(--txt);border:1px solid var(--line)}
+  select{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 12px;color:var(--txt);font-size:14px;font-family:inherit}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  .card h3{margin:0 0 12px;font-size:19px}
+  .stats{display:flex;gap:12px;flex-wrap:wrap}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 18px;min-width:130px;flex:1}
+  .stat .n{font-size:32px;font-weight:800;line-height:1}
+  .stat .l{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:5px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:6px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:15px}
+  th{background:var(--panel2);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;padding:8px 12px}
+  td.num,th.num{text-align:right}
+  .muted{color:var(--muted);font-size:13px}
+  .bar{height:14px;background:#0e1620;border-radius:7px;overflow:hidden;min-width:60px;margin-top:3px}
+  .fill{height:100%;border-radius:7px;background:linear-gradient(90deg,var(--lime),#5cd28a);transition:width .3s}
+  .chartwrap{position:relative;height:340px}
+  .chartwrap.tall{height:380px}
+  .seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{background:transparent;color:var(--muted);border:0;padding:8px 16px;cursor:pointer;font-weight:700;font-size:14px}
+  .seg button.active{background:var(--lime);color:#08331e}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;color:#fff;padding:10px 18px;border-radius:10px;opacity:0;transition:.3s;pointer-events:none;z-index:99;font-size:14px}
+  #toast.show{opacity:.95}#toast.err{background:var(--danger)}#toast.ok{background:var(--ok)}
+  @media(max-width:640px){header{position:static}header h1{font-size:15px}body{font-size:15px}.wrap{padding:9px}.card{padding:12px}.chartwrap{height:260px}.chartwrap.tall{height:300px}.stat .n{font-size:24px}}
+</style>
+</head>
+<body>
+<div id="dbg" style="position:fixed;top:0;left:0;right:0;background:#b8860b;color:#fff;padding:6px 12px;font-size:13px;z-index:9999;text-align:center">กำลังเริ่ม...</div>
+<header><div class="logo">AIS</div><h1>Tablet %Achieve — Area South</h1></header>
+<div class="wrap">
+  <div class="toolbar">
+    <div style="display:flex;align-items:center;gap:4px">
+      <button class="btn ghost" onclick="monthStep(-1)" style="padding:6px 10px">&lsaquo;</button>
+      <select id="periodSel" onchange="periodChanged()" style="min-width:150px"></select>
+      <button class="btn ghost" onclick="monthStep(1)" style="padding:6px 10px">&rsaquo;</button>
+    </div>
+    <span class="muted" id="periodInfo"></span>
+    <div style="flex:1"></div>
+    <button class="btn ghost" onclick="exportXlsx()">Export</button>
+  </div>
+
+  <!-- 1) กราฟแท่งภาพรวมรายเดือน: Target (เทา) + Actual (เขียว) ซ้อน + %Achieve -->
+  <div class="card">
+    <h3>ภาพรวมรายเดือน — Target vs Actual <span class="muted" id="ovAch"></span></h3>
+    <div class="chartwrap tall"><canvas id="ovChart"></canvas></div>
+  </div>
+
+  <!-- KPI -->
+  <div class="card">
+    <div class="stats">
+      <div class="stat"><div class="n" id="kpiAch" style="color:var(--lime)">&mdash;</div><div class="l">% Achieve (ยอดเงิน)</div></div>
+      <div class="stat"><div class="n" id="kpiAct">&mdash;</div><div class="l">Actual (บาท)</div></div>
+      <div class="stat"><div class="n" id="kpiTgt">&mdash;</div><div class="l">Target (บาท)</div></div>
+      <div class="stat"><div class="n" id="kpiQty" style="color:#8DC63F">&mdash;</div><div class="l">ขายได้ (เครื่อง)</div></div>
+    </div>
+  </div>
+
+  <!-- 2) Daily Area — %Achieve สะสม -->
+  <div class="card">
+    <h3>Daily Area — %Achieve (สะสมถึงวันนั้น)</h3>
+    <div class="chartwrap"><canvas id="dayChart"></canvas></div>
+  </div>
+
+  <!-- 3) ราย Location -->
+  <div class="card">
+    <h3>รายสาขา — %Achieve</h3>
+    <table>
+      <thead><tr>
+        <th>สาขา</th><th class="num">Actual</th><th class="num">Target</th>
+        <th class="num">% Achieve</th><th class="num">Gap</th>
+      </tr></thead>
+      <tbody id="locBody"></tbody>
+    </table>
+  </div>
+
+  <!-- 4) กราฟแยกสาขา (Actual รายวัน) -->
+  <div class="card">
+    <h3>ยอดรายวันแยกสาขา</h3>
+    <div id="byShopGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+var SHOPS={'1204':'Surat Thani','1205':'Hat Yai','1213':'Phuket Floresta','1215':'Nakhon Si Thammarat','1216':'Samui','1245':'Serenade Club HY','1252':'Hatyai Village','1255':'Phuket Festival','1259':'Robinson Trang'};
+var SHOP_CODES=['1204','1205','1213','1215','1216','1245','1252','1255','1259'];
+var TB_URL='https://script.google.com/macros/s/AKfycbxnFHnV6xFxZgl3JncF3VTf10Lmm6ewrEjADfcKRpKNIbpRzyYG0CWGIko9ZLmgNCdmDA/exec';
+var DATA={}, LIVE_MONTHS=[], CUR_MONTH='', METRIC='rev', ovChart=null, dayChart=null, shopCharts=[];
+
+function toast(m,cls){var t=document.getElementById('toast');t.textContent=m;t.className='show '+(cls||'');setTimeout(function(){t.className='';},2200);}
+function jsonp(url){return new Promise(function(res,rej){var cb='cb'+Math.random().toString(36).slice(2);var done=false;var s=document.createElement('script');window[cb]=function(d){done=true;res(d);try{delete window[cb];}catch(e){}s.remove();};s.onerror=function(){if(!done){rej(new Error('script error (endpoint?)'));s.remove();}};s.src=url+(url.indexOf('?')<0?'?':'&')+'cb='+cb;document.body.appendChild(s);setTimeout(function(){if(!done)rej(new Error('timeout 12s'));},12000);});}
+
+function loadBundle(month){return jsonp(TB_URL+'?action=tabletBundle&month='+month).then(function(j){if(!j||!j.ok&&!j.cur)throw new Error('bad');if(j.cur)DATA[j.cur.month]=j.cur;if(j.prev)DATA[j.prev.month]=j.prev;return j;});}
+function loadOne(month){return jsonp(TB_URL+'?action=tabletData&month='+month).then(function(j){if(!j||!j.byShop)throw new Error('bad');DATA[j.month||month]=j;return j;});}
+
+function monthList(){var a=[],d=new Date(),y=d.getFullYear(),m=d.getMonth();for(var i=0;i<12;i++){var dt=new Date(y,m-i,1);a.push(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0'));}return a;}
+function monthLabel(mk){var th=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];var p=mk.split('-');return th[+p[1]-1]+' '+p[0];}
+function fmt(n){return Math.round(n).toLocaleString();}
+function metricLabel(){return METRIC==='qty'?'เครื่อง':'บาท';}
+
+function setMetric(m){METRIC=m;document.querySelectorAll('#metricSeg button').forEach(function(b){b.classList.toggle('active',b.dataset.metric===m);});render();}
+function monthStep(d){var i=LIVE_MONTHS.indexOf(CUR_MONTH);if(i<0)i=0;var ni=i+d;if(ni<0||ni>=LIVE_MONTHS.length)return;CUR_MONTH=LIVE_MONTHS[ni];document.getElementById('periodSel').value=CUR_MONTH;ensureAndRender(CUR_MONTH);}
+function periodChanged(){CUR_MONTH=document.getElementById('periodSel').value;ensureAndRender(CUR_MONTH);}
+function ensureAndRender(month){if(DATA[month]){render();}else{loadOne(month).then(render).catch(function(){toast('โหลดไม่ได้','err');});}}
+
+function A(shop){ // actual value by metric
+  return METRIC==='qty'?(shop.actQty||0):(shop.actRev||0);
+}
+function T(shop){ return METRIC==='qty'?(shop.tgtQty||0):(shop.tgtRev||0); }
+function achOf(shop){ var t=T(shop); return t>0?(A(shop)/t*100):0; }
+
+function render(){
+  var md=DATA[CUR_MONTH];if(!md){return;}
+  var tot=md.total||{};
+  var totAct=METRIC==='qty'?tot.actQty:tot.actRev;
+  var totTgt=METRIC==='qty'?tot.tgtQty:tot.tgtRev;
+  var totAch=totTgt>0?(totAct/totTgt*100):0;
+  // KPI
+  document.getElementById('kpiAch').textContent=totAch.toFixed(1)+'%';
+  document.getElementById('kpiAch').style.color=totAch>=100?'#3dba6f':(totAch>=70?'#8DC63F':'#e0533d');
+  document.getElementById('kpiAct').textContent=fmt(totAct);
+  document.getElementById('kpiTgt').textContent=fmt(totTgt);
+  document.getElementById('kpiQty').textContent=fmt(tot.actQty||0);
+  document.getElementById('ovAch').textContent='· %Achieve '+totAch.toFixed(1)+'%';
+  document.getElementById('periodInfo').textContent='· '+monthLabel(CUR_MONTH);
+
+  renderOverview(md);
+  renderDaily(md);
+  renderLoc(md);
+  renderByShop(md);
+}
+
+// กราฟแท่งภาพรวม: แต่ละสาขา Target(เทา พื้นหลัง) + Actual(เขียว ซ้อน) + %Achieve บนหัว
+function renderOverview(md){
+  if(!window.Chart)return;
+  var labels=[],tgt=[],act=[],ach=[];
+  SHOP_CODES.forEach(function(c){var s=md.byShop[c]||{};labels.push(SHOPS[c]);var t=T(s),a=A(s);tgt.push(t);act.push(a);ach.push(t>0?(a/t*100):0);});
+  if(ovChart)ovChart.destroy();
+  var ctx=document.getElementById('ovChart').getContext('2d');
+  ovChart=new Chart(ctx,{type:'bar',data:{labels:labels,datasets:[
+    {label:'Target',data:tgt,backgroundColor:'#3a4a58',borderRadius:6,barPercentage:0.72,categoryPercentage:0.8,order:2,datalabels:{display:false}},
+    {label:'Actual',data:act,backgroundColor:function(c){return ach[c.dataIndex]>=100?'#3dba6f':'#8DC63F';},borderRadius:6,barPercentage:0.44,categoryPercentage:0.8,order:1,
+      datalabels:{display:true,anchor:'end',align:'end',offset:2,color:'#fff',backgroundColor:function(c){return ach[c.dataIndex]>=100?'rgba(61,186,111,.92)':'rgba(10,92,54,.92)';},borderRadius:4,padding:{top:3,bottom:3,left:5,right:5},font:{size:13,weight:'bold'},formatter:function(v,c){return ach[c.dataIndex].toFixed(0)+'%';}}}
+  ]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22}},
+    plugins:{legend:{labels:{color:'#e8eef3',font:{size:13}}},tooltip:{callbacks:{afterBody:function(items){var i=items[0].dataIndex;return '%Achieve: '+ach[i].toFixed(1)+'%';}}}},
+    scales:{x:{ticks:{color:'#8aa0b2',font:{size:12},maxRotation:40,minRotation:0},grid:{display:false}},y:{ticks:{color:'#8aa0b2'},grid:{color:'#22303d'},beginAtZero:true}}}});
+}
+
+// Daily Area %Achieve สะสม (actual สะสม ÷ target เดือน)
+function renderDaily(md){
+  if(!window.Chart)return;
+  var tot=md.total||{};var tgtMonth=METRIC==='qty'?tot.tgtQty:tot.tgtRev;
+  // รวม byDay ทุกสาขา
+  var byDay={};SHOP_CODES.forEach(function(c){var s=md.byShop[c];if(!s||!s.byDay)return;Object.keys(s.byDay).forEach(function(dt){var val=METRIC==='qty'?s.byDay[dt].qty:s.byDay[dt].rev;byDay[dt]=(byDay[dt]||0)+val;});});
+  var days=Object.keys(byDay).sort();
+  var cum=0,labels=[],ach=[];
+  days.forEach(function(dt){cum+=byDay[dt];labels.push(+dt.slice(8,10));ach.push(tgtMonth>0?(cum/tgtMonth*100):0);});
+  if(dayChart)dayChart.destroy();
+  var ctx=document.getElementById('dayChart').getContext('2d');
+  var grad=ctx.createLinearGradient(0,0,0,300);grad.addColorStop(0,'rgba(141,198,63,.28)');grad.addColorStop(1,'rgba(141,198,63,0)');
+  dayChart=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[
+    {label:'%Achieve สะสม',data:ach,borderColor:'#8DC63F',borderWidth:3,backgroundColor:grad,fill:true,tension:0.35,pointRadius:2,pointHoverRadius:5,
+      datalabels:{display:function(c){return c.dataIndex===ach.length-1;},align:'top',color:'#8DC63F',font:{size:14,weight:'bold'},formatter:function(v){return v.toFixed(0)+'%';}}},
+    {label:'เป้า 100%',data:labels.map(function(){return 100;}),borderColor:'#5a6b7a',borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false,datalabels:{display:false}}
+  ]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:18}},
+    plugins:{legend:{labels:{color:'#e8eef3',font:{size:13}}}},
+    scales:{x:{ticks:{color:'#8aa0b2',font:{size:11}},grid:{display:false}},y:{ticks:{color:'#8aa0b2',callback:function(v){return v+'%';}},grid:{color:'#22303d'},beginAtZero:true}}}});
+}
+
+function renderLoc(md){
+  var rows=SHOP_CODES.map(function(c){var s=md.byShop[c]||{name:SHOPS[c]};return {code:c,name:SHOPS[c],act:A(s),tgt:T(s),ach:achOf(s)};});
+  rows.sort(function(a,b){return b.ach-a.ach;});
+  var html='';
+  rows.forEach(function(r){
+    var col=r.ach>=100?'#3dba6f':(r.ach>=70?'#8DC63F':'#e0533d');
+    var barW=Math.min(100,r.ach);
+    var gap=Math.max(0,r.tgt-r.act);
+    html+='<tr><td><b>'+r.name+'</b> <span style="color:#8DC63F;font-size:12px">'+r.code+'</span></td>'+
+      '<td class="num" style="font-weight:800;color:#8DC63F">'+fmt(r.act)+'</td>'+
+      '<td class="num">'+fmt(r.tgt)+'</td>'+
+      '<td style="min-width:120px"><div style="text-align:right;font-weight:800;color:'+col+';font-size:16px">'+r.ach.toFixed(1)+'%</div><div class="bar"><div class="fill" style="width:'+barW+'%;background:linear-gradient(90deg,'+col+',#5cd28a)"></div></div></td>'+
+      '<td class="num" style="color:#8aa0b2">'+fmt(gap)+'</td></tr>';
+  });
+  // รวม Area
+  var tot=md.total||{};var tA=METRIC==='qty'?tot.actQty:tot.actRev,tT=METRIC==='qty'?tot.tgtQty:tot.tgtRev,tAch=tT>0?(tA/tT*100):0;
+  html+='<tr style="border-top:2px solid var(--lime)"><td><b>รวม Area</b></td>'+
+    '<td class="num" style="font-weight:800">'+fmt(tA)+'</td><td class="num" style="font-weight:800">'+fmt(tT)+'</td>'+
+    '<td class="num" style="font-weight:800;color:var(--lime);font-size:16px">'+tAch.toFixed(1)+'%</td>'+
+    '<td class="num">'+fmt(Math.max(0,tT-tA))+'</td></tr>';
+  document.getElementById('locBody').innerHTML=html;
+}
+
+function renderByShop(md){
+  shopCharts.forEach(function(c){try{c.destroy();}catch(e){}});shopCharts=[];
+  var grid=document.getElementById('byShopGrid');grid.innerHTML='';
+  SHOP_CODES.forEach(function(c){
+    var s=md.byShop[c];if(!s)return;
+    var byDay=s.byDay||{};var days=Object.keys(byDay).sort();
+    var card=document.createElement('div');card.style.cssText='background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px';
+    var act=A(s),tgt=T(s),ach=tgt>0?(act/tgt*100):0;
+    var col=ach>=100?'#3dba6f':(ach>=70?'#8DC63F':'#e0533d');
+    card.innerHTML='<div style="font-weight:800;font-size:13px;margin-bottom:2px">'+SHOPS[c]+'</div><div class="muted" style="font-size:11px;margin-bottom:4px">'+fmt(act)+'/'+fmt(tgt)+' · <b style="color:'+col+'">'+ach.toFixed(0)+'%</b></div><div style="position:relative;height:110px"><canvas></canvas></div>';
+    grid.appendChild(card);
+    if(!window.Chart||!days.length)return;
+    var cv=card.querySelector('canvas');
+    var vals=days.map(function(dt){return METRIC==='qty'?byDay[dt].qty:byDay[dt].rev;});
+    var ch=new Chart(cv.getContext('2d'),{type:'bar',data:{labels:days.map(function(d){return +d.slice(8,10);}),datasets:[{data:vals,backgroundColor:col,borderRadius:2}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:false}},scales:{x:{ticks:{color:'#8aa0b2',font:{size:9},autoSkip:false},grid:{display:false}},y:{display:false,beginAtZero:true}}}});
+    shopCharts.push(ch);
+  });
+}
+
+function exportXlsx(){
+  if(!window.XLSX){toast('export ไม่พร้อม','err');return;}
+  var md=DATA[CUR_MONTH];if(!md)return;
+  var aoa=[['สาขา','Code','Actual '+metricLabel(),'Target '+metricLabel(),'% Achieve','Gap']];
+  SHOP_CODES.forEach(function(c){var s=md.byShop[c]||{};var a=A(s),t=T(s);aoa.push([SHOPS[c],c,a,t,(t>0?(a/t*100).toFixed(1):'0')+'%',Math.max(0,t-a)]);});
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa),'Tablet');
+  XLSX.writeFile(wb,'Tablet_'+CUR_MONTH+'_'+METRIC+'.xlsx');
+}
+
+function dbg(m,color){var d=document.getElementById('dbg');if(d){d.textContent=m;if(color)d.style.background=color;}}
+function boot(){
+  if(window.__booting)return;window.__booting=true;
+  dbg('เริ่มโหลด... เรียก endpoint');
+  LIVE_MONTHS=monthList();
+  var sel=document.getElementById('periodSel');sel.innerHTML='';
+  LIVE_MONTHS.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=monthLabel(m);sel.appendChild(o);});
+  CUR_MONTH=LIVE_MONTHS[0];sel.value=CUR_MONTH;
+  var tries=0;
+  (function attempt(){
+    dbg('กำลังเรียกข้อมูล '+CUR_MONTH+' (ครั้งที่ '+(tries+1)+')...');
+    loadOne(CUR_MONTH).then(function(j){
+      dbg('โหลดสำเร็จ ✓ Actual '+(j.total?Math.round(j.total.actRev).toLocaleString():'?')+' บ.','#0A5C36');
+      setTimeout(function(){var d=document.getElementById('dbg');if(d)d.style.display='none';},2500);
+      render();
+    }).catch(function(e){
+      tries++;
+      dbg('เรียกไม่ได้ (ครั้งที่ '+tries+'): '+(e&&e.message||e),'#c0392b');
+      if(tries<5){setTimeout(attempt,1400);}else{window.__booting=false;dbg('เชื่อมต่อไม่ได้ — endpoint ไม่ตอบ (เช็ค deploy)','#c0392b');}
+    });
+  })();
+}
+window.__afterLibs=boot;
+if(window.__libReady&&window.__libReady.chart)boot();
+document.addEventListener('DOMContentLoaded',boot);
+window.addEventListener('load',boot);
+setTimeout(boot,1500);setTimeout(boot,3500);
+</script>
+</body>
+</html>
