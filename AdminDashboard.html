@@ -626,7 +626,7 @@ function mainTab(m){
   if(m==='detail'){ if(!TRADE.length)loadTrade(); else renderDetail(); }
   if(m==='price'){ if(!TRADE.length)loadTrade(); else renderPrice(); }
   if(m==='perf'){ if(!TRADE.length)loadTrade(); else renderPerf(); }
-  if(m==='compare'){ STAFF_NAME_MAP=null; setCmpViewBtns(); if(!TRADE.length)loadTrade(); if(!DB.ais.length&&!DB.pc.length)loadStaff(); if(!MGRSUP.length)loadMgrSup(); if(!PRO_ROSTER.length)loadProRoster(); loadModels(); loadRos(); }
+  if(m==='compare'){ STAFF_NAME_MAP=null; setCmpViewBtns(); if(!TRADE.length)loadTrade(); if(!DB.ais.length&&!DB.pc.length)loadStaff(); if(!MGRSUP.length)loadMgrSup(); if(!PRO_ROSTER.length)loadProRoster(); loadModels(function(){ loadRos(); }); }
 }
 
 /* ============ DASHBOARD: staff count by branch ============ */
@@ -889,7 +889,9 @@ function buildPerfRows(){
 
 /* ============ ROS Sale Dashboard (สะสมข้อมูล + เทียบ Trade-in) ============ */
 // รุ่นที่กรอง (คอลัมน์ MODEL) — แก้ได้จากปุ่ม "รุ่นที่กรอง" เก็บไว้ที่ server
-var CMP_MODELS=['IP17_256GB','IP17_512GB','IP17E_256GB','IP17P_256GB','IP17P_512GB','IP17PM_1TB','IP17PM_256GB','IP17PM_512GB'];
+var CMP_MODELS = (CMP_SERIES==='IP18')
+  ? ['IP18P_256GB','IP18P_512GB','IP18P_1TB','IP18PM_256GB','IP18PM_512GB','IP18PM_1TB']
+  : ['IP17_256GB','IP17_512GB','IP17E_256GB','IP17P_256GB','IP17P_512GB','IP17PM_1TB','IP17PM_256GB','IP17PM_512GB'];
 var CMP_MODEL_SET={};
 function cmpRebuildModelSet(){
   CMP_MODEL_SET={};
