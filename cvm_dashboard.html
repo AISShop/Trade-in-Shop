@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="th"><head>
+<script src="gas-shim.js"></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CVM Mobile — Offer Recommendation</title>
+<style>
+@font-face{font-family:'DB Heavent';src:url('DB_Heavent_Med_Cond_v3_2.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'DB Heavent';src:url('DBHeavent-BlackCond.ttf') format('truetype');font-weight:700;font-display:swap}
+*{font-family:'DB Heavent','Sarabun','Segoe UI',system-ui,sans-serif !important;box-sizing:border-box}
+:root{--green:#0A5C36;--lime:#8DC63F;--ink:#0f1722;--panel:#16202b;--panel2:#1d2a37;--line:#2a3a48;--muted:#8aa0b2;--txt:#e8eef3;--red:#e0533d;--blue:#4c8ff5}
+body{margin:0;background:var(--ink);color:var(--txt);font-size:17px;padding:16px 20px}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.btn{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:7px 12px;cursor:pointer;font-size:14px}
+select{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 12px;color:var(--txt);font-size:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.kpi .l{font-size:13px;color:var(--muted)}.kpi .n{font-size:32px;font-weight:800;margin:2px 0}
+.cmp{display:flex;gap:10px;flex-wrap:wrap;font-size:13px}
+.cmp span{background:var(--panel2);border-radius:8px;padding:2px 8px}
+.up{color:var(--lime)}.dn{color:var(--red)}.eq{color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+.card h3{margin:0 0 8px;font-size:17px;color:var(--lime)}
+.sub{font-size:12px;color:var(--muted)}
+.chart{position:relative;height:300px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{color:var(--muted);font-size:12px;background:var(--panel2)}th:first-child,td:first-child{text-align:left}
+.msg{padding:40px;text-align:center;color:var(--muted)}
+@media(max-width:640px){body{padding:10px}.card{overflow-x:auto}}
+</style></head>
+<body>
+<div class="bar">
+  <b style="font-size:20px;color:var(--lime)">📞 CVM Mobile — Offer Recommendation</b>
+  <span style="flex:1"></span>
+  <select id="month" onchange="MONTH=this.value;REPORT='';load()"></select>
+  <select id="rday" onchange="REPORT=this.value;render()"></select>
+  <button class="btn" onclick="load()">↻ รีเฟรช</button>
+</div>
+<div class="sub" id="note" style="margin:-8px 0 12px">Area South 9 สาขา · Transaction = MoreInfo "Accept" · Rev = ราคา MainOffer − แพ็กเกจเดิม (นับเฉพาะที่เพิ่มขึ้น) · ข้อมูลวันที่ D มาในไฟล์วันถัดไป</div>
+<div id="body"><div class="msg">กำลังโหลด…</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script>
+var ADMIN_URL='https://script.google.com/macros/s/AKfycbxnFHnV6xFxZgl3JncF3VTf10Lmm6ewrEjADfcKRpKNIbpRzyYG0CWGIko9ZLmgNCdmDA/exec';
+var D=null, MONTH='', REPORT='', CH={};
+var TH=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function jsonp(params){
+  return new Promise(function(res,rej){
+    var cb='cvm'+Date.now()+Math.floor(Math.random()*1e4), s=document.createElement('script');
+    var to=setTimeout(function(){clean();rej(new Error('timeout'));},90000);
+    function clean(){clearTimeout(to);delete window[cb];if(s.parentNode)s.parentNode.removeChild(s);}
+    window[cb]=function(d){clean();res(d);};
+    s.src=ADMIN_URL+'?'+Object.keys(params).map(function(k){return k+'='+encodeURIComponent(params[k]);}).join('&')+'&cb='+cb+'&_='+Date.now();
+    s.onerror=function(){clean();rej(new Error('network'));};
+    document.body.appendChild(s);
+  });
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function fmt(n){return Math.round(n||0).toLocaleString('en-US');}
+function dLabel(d){var m=String(d||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?(+m[3])+' '+TH[+m[2]-1]+' '+String(+m[1]+543).slice(-2):'-';}
+function mLabel(m){var x=String(m||'').match(/^(\d{4})-(\d{2})/);return x?TH[+x[2]-1]+' '+(+x[1]+543):m;}
+function addDays(d,n){var t=new Date(d+'T12:00:00');t.setDate(t.getDate()+n);return t.toISOString().slice(0,10);}
+function sameDayPrevMonth(d){var t=new Date(d+'T12:00:00'),day=t.getDate();t.setDate(1);t.setMonth(t.getMonth()-1);var last=new Date(t.getFullYear(),t.getMonth()+1,0).getDate();t.setDate(Math.min(day,last));return t.toISOString().slice(0,10);}
+function pick(day){return (day.slice(0,7)===D.month?D.byDay:D.prevByDay)[day]||null;}
+function cmp(cur,base,label){
+  if(base==null) return '<span class="eq">'+label+' —</span>';
+  var diff=cur-base, pct=base?(diff/base*100):(cur?100:0), cls=diff>0?'up':(diff<0?'dn':'eq');
+  return '<span class="'+cls+'">'+label+' '+(diff>0?'+':'')+fmt(diff)+' ('+(diff>0?'+':'')+pct.toFixed(1)+'%)</span>';
+}
+function load(){
+  document.getElementById('body').innerHTML='<div class="msg">กำลังโหลด…</div>';
+  jsonp({action:'cvmSummary',month:MONTH}).then(function(d){
+    if(!d||!d.ok){document.getElementById('body').innerHTML='<div class="msg">โหลดไม่สำเร็จ: '+esc(d&&d.error)+'</div>';return;}
+    D=d; MONTH=d.month;
+    var ms=document.getElementById('month'); ms.innerHTML=(d.months||[]).map(function(m){return '<option value="'+m+'"'+(m===d.month?' selected':'')+'>'+mLabel(m)+'</option>';}).join('')||'<option>ไม่มีข้อมูล</option>';
+    var days=Object.keys(d.byDay).sort().reverse();
+    if(!REPORT||days.indexOf(REPORT)<0) REPORT=d.maxD||days[0]||'';
+    document.getElementById('rday').innerHTML=days.map(function(x){return '<option value="'+x+'"'+(x===REPORT?' selected':'')+'>ข้อมูล '+dLabel(x)+'</option>';}).join('');
+    render();
+  }).catch(function(e){document.getElementById('body').innerHTML='<div class="msg">เชื่อมต่อไม่ได้ ('+esc(e.message)+')</div>';});
+}
+function render(){
+  if(!D)return;
+  if(!REPORT){document.getElementById('body').innerHTML='<div class="msg">ยังไม่มีข้อมูล — ส่งไฟล์ผ่าน Power Automate (action cvmUploadFile)</div>';return;}
+  var cur=D.byDay[REPORT]||{acc:0,rej:0,other:0,rev:0,revCnt:0};
+  var mom=pick(sameDayPrevMonth(REPORT)), d2=pick(addDays(REPORT,-2));
+  var mtd=0,mtdAcc=0,pmtd=0,dd=+REPORT.slice(8,10);
+  Object.keys(D.byDay).forEach(function(k){ if(k<=REPORT){mtd+=D.byDay[k].rev;mtdAcc+=D.byDay[k].acc;} });
+  Object.keys(D.prevByDay).forEach(function(k){ if(+k.slice(8,10)<=dd) pmtd+=D.prevByDay[k].rev; });
+  var rate=(cur.acc+cur.rej)?cur.acc/(cur.acc+cur.rej)*100:0;
+  var h='<div class="kpis">'+
+    kpi('Transaction Accept · '+dLabel(REPORT),fmt(cur.acc),'var(--lime)',cmp(cur.acc,mom?mom.acc:null,'MoM')+cmp(cur.acc,d2?d2.acc:null,'Day-2'))+
+    kpi('Rev เพิ่ม · '+dLabel(REPORT),'฿'+fmt(cur.rev),'var(--blue)',cmp(cur.rev,mom?mom.rev:null,'MoM')+cmp(cur.rev,d2?d2.rev:null,'Day-2')+'<span class="eq">'+cur.revCnt+' รายการมี Rev</span>')+
+    kpi('Rev MTD · '+mLabel(D.month)+' (ถึง '+dd+')','฿'+fmt(mtd),'var(--txt)',cmp(mtd,pmtd,'vs เดือนก่อน ช่วงเดียวกัน')+'<span class="eq">Accept MTD '+fmt(mtdAcc)+'</span>')+
+    kpi('Accept vs Reject · '+dLabel(REPORT),rate.toFixed(1)+'%','var(--txt)','<span class="up">Accept '+cur.acc+'</span><span class="dn">Reject '+cur.rej+'</span><span class="eq">อื่นๆ '+cur.other+'</span>')+
+    '</div>'+
+    card('📈 Transaction Accept รายวัน','เดือนนี้ vs '+mLabel(D.prevMonth)+' (เส้นประ)','cTx')+
+    card('💰 Rev เพิ่ม รายวัน','เดือนนี้ vs '+mLabel(D.prevMonth)+' (เส้นประ) · ป้าย = Rev (+/− เทียบวันก่อนหน้า)','cRev')+
+    card('⚖️ Transaction Accept vs Reject รายวัน','','cAR')+
+    locTable();
+  document.getElementById('body').innerHTML=h;
+  drawCharts();
+}
+function kpi(l,n,col,c){return '<div class="kpi"><div class="l">'+l+'</div><div class="n" style="color:'+col+'">'+n+'</div><div class="cmp">'+c+'</div></div>';}
+function card(t,s,id){return '<div class="card"><h3>'+t+'</h3><div class="sub" style="margin-bottom:6px">'+s+'</div><div class="chart"><canvas id="'+id+'"></canvas></div></div>';}
+function locTable(){
+  var rows=Object.keys(D.byLoc).map(function(k){return D.byLoc[k];}).sort(function(a,b){return b.rev-a.rev;});
+  var T={acc:0,rej:0,rev:0,dAcc:0,dRev:0};
+  var body=rows.map(function(L){
+    var dd=L.days[REPORT]||{acc:0,rev:0}, r=(L.acc+L.rej)?L.acc/(L.acc+L.rej)*100:0;
+    T.acc+=L.acc;T.rej+=L.rej;T.rev+=L.rev;T.dAcc+=dd.acc;T.dRev+=dd.rev;
+    return '<tr><td><b>'+L.code+'</b> <span class="sub">'+esc(L.name)+'</span></td><td>'+dd.acc+'</td><td>'+fmt(dd.rev)+'</td><td>'+L.acc+'</td><td>'+L.rej+'</td><td>'+r.toFixed(1)+'%</td><td><b>'+fmt(L.rev)+'</b></td></tr>';
+  }).join('');
+  var tr=(T.acc+T.rej)?T.acc/(T.acc+T.rej)*100:0;
+  return '<div class="card"><h3>📍 รายสาขา</h3><div style="overflow-x:auto"><table><thead><tr><th>สาขา</th><th>Accept '+dLabel(REPORT)+'</th><th>Rev '+dLabel(REPORT)+'</th><th>Accept MTD</th><th>Reject MTD</th><th>%Accept</th><th>Rev MTD</th></tr></thead><tbody>'+body+
+    '<tr style="font-weight:700;background:rgba(141,198,63,.08)"><td>รวม Area</td><td>'+T.dAcc+'</td><td>'+fmt(T.dRev)+'</td><td>'+T.acc+'</td><td>'+T.rej+'</td><td>'+tr.toFixed(1)+'%</td><td>'+fmt(T.rev)+'</td></tr></tbody></table></div></div>';
+}
+function series(src,month,key,n,upto){var a=[];for(var i=1;i<=n;i++){var k=month+'-'+('0'+i).slice(-2),o=src[k];a.push(upto&&i>upto?null:(o?o[key]:(upto?0:null)));}return a;}
+function drawCharts(){
+  if(typeof Chart==='undefined')return;
+  if(window.ChartDataLabels&&!Chart._cvm){Chart.register(ChartDataLabels);Chart._cvm=1;}
+  Object.keys(CH).forEach(function(k){CH[k].destroy();}); CH={};
+  var y=+D.month.slice(0,4),m=+D.month.slice(5,7),n=new Date(y,m,0).getDate(),upto=+String(D.maxD).slice(8,10)||n;
+  var labels=[];for(var i=1;i<=n;i++)labels.push(String(i));
+  var accCur=series(D.byDay,D.month,'acc',n,upto),accPrev=series(D.prevByDay,D.prevMonth,'acc',n,0);
+  var revCur=series(D.byDay,D.month,'rev',n,upto),revPrev=series(D.prevByDay,D.prevMonth,'rev',n,0);
+  var rejCur=series(D.byDay,D.month,'rej',n,upto);
+  var axis={x:{ticks:{color:'#8aa0b2',maxRotation:0,autoSkip:false,font:{size:10}},grid:{display:false}},y:{beginAtZero:true,ticks:{color:'#8aa0b2'},grid:{color:'#22303d'}}};
+  var legend={labels:{color:'#8aa0b2',usePointStyle:true,font:{size:12}}};
+  function line(id,cur,prev,col,isRev){
+    var low=function(i){return cur[i]!=null&&prev[i]!=null&&cur[i]<prev[i];};
+    CH[id]=new Chart(document.getElementById(id),{type:'line',data:{labels:labels,datasets:[
+      {label:mLabel(D.prevMonth),data:prev,borderColor:'#7c8b99',borderDash:[6,4],borderWidth:2,pointRadius:0,tension:.35,spanGaps:true,datalabels:{display:false}},
+      {label:mLabel(D.month),data:cur,borderColor:col,borderWidth:3,tension:.35,fill:true,backgroundColor:col+'22',
+        pointBackgroundColor:function(c){return low(c.dataIndex)?'#e0533d':col;},pointRadius:function(c){return c.raw!=null?4:0;},
+        datalabels:{display:function(c){return c.raw!=null;},anchor:'end',align:'top',offset:3,clamp:true,font:{size:10,weight:'bold'},
+          color:function(c){return low(c.dataIndex)?'#ffd0c8':'#eaffd0';},backgroundColor:function(c){return low(c.dataIndex)?'rgba(190,50,40,.85)':'rgba(10,92,54,.8)';},borderRadius:4,padding:{top:1,bottom:1,left:3,right:3},
+          formatter:function(v,c){ if(v==null)return ''; if(!isRev)return fmt(v); var p=c.dataIndex>0?cur[c.dataIndex-1]:null; var d=p==null?'':' ('+(v-p>=0?'+':'')+fmt(v-p)+')'; return fmt(v)+d; }}}
+    ]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:22,right:10}},interaction:{mode:'index',intersect:false},plugins:{legend:legend},scales:axis}});
+  }
+  line('cTx',accCur,accPrev,'#8DC63F',false);
+  line('cRev',revCur,revPrev,'#4c8ff5',true);
+  CH.cAR=new Chart(document.getElementById('cAR'),{type:'bar',data:{labels:labels,datasets:[
+    {label:'Accept',data:accCur,backgroundColor:'#8DC63F',datalabels:{display:function(c){return c.raw>0;},color:'#0f1722',font:{size:9,weight:'bold'},anchor:'end',align:'start'}},
+    {label:'Reject',data:rejCur,backgroundColor:'#e0533d',datalabels:{display:function(c){return c.raw>0;},color:'#fff',font:{size:9,weight:'bold'},anchor:'end',align:'start'}}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:legend},scales:axis}});
+}
+load();
+</script>
+</body></html>
