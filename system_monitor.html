@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>System Monitor — AIS Area South</title>
+<style>
+*{box-sizing:border-box;font-family:'DB Heavent','Sarabun','Segoe UI',system-ui,sans-serif}
+:root{--ink:#0d141c;--side:#111a24;--panel:#16202b;--panel2:#1d2a37;--line:#26343f;--muted:#8aa0b2;--txt:#e8eef3;--green:#0A5C36;--lime:#8DC63F;--ok:#3dba6f;--warn:#e3b341;--err:#e0533d;--info:#5b9bd5}
+body{margin:0;background:var(--ink);color:var(--txt);font-size:15px}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.err{color:var(--err)}.info{color:var(--info)}
+.bg-ok{background:var(--ok)}.bg-warn{background:var(--warn)}.bg-err{background:var(--err)}.bg-info{background:var(--info)}
+.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:8px 14px;cursor:pointer;font-size:14px}
+.btn:hover{border-color:var(--lime)}.btn.on{background:var(--green);border-color:var(--green);color:#fff}
+/* login (เหมือนเดิม) */
+.login{max-width:380px;margin:80px auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
+.login h2{margin:0 0 4px;color:var(--lime)}.login p{color:var(--muted);font-size:13px;margin:0 0 16px}
+.login input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--txt);font-size:16px;margin-bottom:10px}
+.login input.otp{font-size:28px;letter-spacing:10px;text-align:center}
+.login .btn{width:100%;padding:12px;font-size:16px;background:var(--green);border-color:var(--green);color:#fff}
+.login .err2{color:var(--err);font-size:13px;min-height:18px;margin-top:8px}
+/* layout A */
+.layout{display:flex;min-height:100vh}
+.side{width:230px;flex:0 0 230px;background:var(--side);border-right:1px solid var(--line);padding:18px 12px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px 18px}
+.brand .lg{width:38px;height:38px;border-radius:10px;background:var(--lime);color:var(--green);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px}
+.brand b{font-size:16px}.brand div div{font-size:12px;color:var(--muted)}
+.nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--muted);text-decoration:none;cursor:pointer;margin-bottom:2px;font-size:15px}
+.nav a:hover{background:rgba(255,255,255,.04);color:var(--txt)}
+.nav a.on{background:var(--green);color:#fff}
+.nav a .cnt{margin-left:auto;font-size:11px;padding:1px 7px;border-radius:10px;background:var(--panel2);color:var(--txt)}
+.nav a .cnt.e{background:var(--err);color:#fff}.nav a .cnt.w{background:var(--warn);color:#1a1300}
+.side .foot{margin-top:auto;font-size:12px;color:var(--muted);padding:8px 6px;border-top:1px solid var(--line)}
+.main{flex:1;min-width:0;padding:20px 26px 40px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.top h1{margin:0;font-size:22px}.top .sub{color:var(--muted);font-size:13px}
+.sec{display:none}.sec.on{display:block}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi .l{font-size:13px;color:var(--muted)}.kpi .n{font-size:30px;font-weight:800;margin-top:2px}
+.kpi:before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--line)}
+.kpi.k-ok:before{background:var(--ok)}.kpi.k-warn:before{background:var(--warn)}.kpi.k-err:before{background:var(--err)}.kpi.k-info:before{background:var(--info)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+.card h3{margin:0 0 12px;font-size:16px;color:var(--lime)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:14px;vertical-align:middle}
+th{color:var(--muted);font-size:12px;font-weight:600;background:var(--panel2);text-transform:uppercase;letter-spacing:.4px}
+tr.sys{cursor:pointer}tr.sys:hover td{background:rgba(141,198,63,.05)}
+tr.sys.open td{background:rgba(141,198,63,.07)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.pill{font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px;color:#0f1722;white-space:nowrap}
+.mini{display:inline-flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap}
+.chev{color:var(--muted);transition:.2s;display:inline-block}tr.open .chev{transform:rotate(90deg)}
+.detail td{background:#121b25;padding:0}
+.det{padding:16px 18px;display:grid;grid-template-columns:1.25fr 1fr;gap:18px}
+.det h4{margin:0 0 8px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;margin-bottom:12px}
+.node{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px 9px}
+.node .k{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.arr{color:var(--muted)}
+.ck{display:flex;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.ck .g{min-width:60px;color:var(--muted);font-size:12px;padding-top:2px}
+.fix{font-size:12px;color:var(--warn);margin-top:3px}
+.files code{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 8px;margin:0 4px 4px 0;font-size:12px}
+.todo{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.todo:last-child{border-bottom:0}.todo:hover b{color:var(--lime)}
+.msg{padding:30px;text-align:center;color:var(--muted)}
+.chips{display:flex;gap:8px;margin-bottom:12px}
+.sw{position:relative;display:inline-block;width:46px;height:26px;flex:0 0 46px}
+.sw input{opacity:0;width:0;height:0}
+.sw span{position:absolute;inset:0;background:#3a4856;border-radius:26px;transition:.2s;cursor:pointer}
+.sw span:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.sw input:checked+span{background:#3dba6f}.sw input:checked+span:before{transform:translateX(20px)}
+.trow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.trow .tn{flex:1;min-width:0}.trow .tn b{font-size:15px}.trow .tn div{font-size:12px;color:var(--muted)}
+@media(max-width:900px){.layout{display:block}.side{position:static;width:auto;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px}.side .foot,.brand div div{display:none}.brand{padding:0 8px 0 0}.nav{display:flex;flex-wrap:wrap;gap:2px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.det{grid-template-columns:1fr}.main{padding:14px}}
+</style></head>
+<body>
+<div id="loginBox" class="login">
+  <h2>🔐 System Monitor</h2><p id="lgHint">AIS Area South · ใส่ User แล้วยืนยัน OTP ที่ส่งเข้าแชท Teams ของคุณ</p>
+  <div id="step1"><input id="lgU" placeholder="User" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn" id="lgBtn" onclick="doLogin()">ขอ OTP</button></div>
+  <div id="step2" style="display:none"><input id="lgO" class="otp" maxlength="6" inputmode="numeric" placeholder="______" onkeydown="if(event.key==='Enter')doOtp()">
+    <button class="btn" id="otpBtn" onclick="doOtp()">ยืนยัน OTP</button>
+    <div style="text-align:center;margin-top:10px"><a href="#" onclick="resetLogin();return false" style="color:var(--muted);font-size:13px">← เริ่มใหม่</a></div></div>
+  <div class="err2" id="lgErr"></div>
+</div>
+<div id="app" style="display:none">
+<div class="layout">
+ <aside class="side">
+  <div class="brand"><div class="lg">A</div><div><b>System Monitor</b><div>AIS Area South</div></div></div>
+  <nav class="nav" id="nav">
+   <a data-s="ov" class="on" onclick="sec('ov')">🏠 ภาพรวม</a>
+   <a data-s="sys" onclick="sec('sys')">🧩 ระบบ <span class="cnt" id="cSys">–</span></a>
+   <a data-s="teams" onclick="sec('teams')">📣 รายงาน Teams</a>
+   <a data-s="mail" onclick="sec('mail')">📧 รายงานอีเมล</a>
+   <a data-s="sheets" onclick="sec('sheets')">🗂️ ชีทข้อมูล <span class="cnt" id="cSh">–</span></a>
+   <a data-s="trg" onclick="sec('trg')">⏰ Trigger <span class="cnt" id="cTr">–</span></a>
+  </nav>
+  <div class="foot">ตรวจอย่างเดียว ไม่แก้ข้อมูล<br><a href="#" onclick="logout();return false" style="color:var(--muted)">🚪 ออกจากระบบ</a></div>
+ </aside>
+ <main class="main">
+  <div class="top"><div style="flex:1"><h1 id="secTitle">ภาพรวม</h1><div class="sub" id="sub">กำลังตรวจ…</div></div>
+   <button class="btn" onclick="load()">↻ ตรวจใหม่</button></div>
+  <div id="grid"></div>
+
+  <section class="sec on" id="s_ov">
+   <div class="kpis" id="kpis"></div>
+   <div class="card"><h3>⚠️ ต้องดำเนินการ</h3><div id="todo"><div class="msg">กำลังตรวจ…</div></div></div>
+   <div class="card"><h3>📖 วิธีอ่าน</h3><div style="font-size:14px;color:var(--muted);line-height:1.8">
+    <span class="ok">● ปกติ</span> · <span class="warn">● เตือน</span> (ข้อมูลช้า 1 วัน / ยังไม่ส่ง Teams หลังเที่ยง / trigger ซ้ำ) · <span class="err">● ผิดพลาด</span> (ข้อมูลขาด ≥2 วัน / ไม่มี trigger / ฟังก์ชันหาย) · <span class="info">● ข้อมูล</span><br>
+    ข้อมูลช้าไม่ได้แปลว่าพังเสมอ — อาจเป็นเพราะเมลยังไม่มา หรือวันนั้นไม่มีรายการจริง · แก้เฉพาะไฟล์ในช่อง "ไฟล์ที่เกี่ยวข้อง" ของระบบนั้น</div></div>
+  </section>
+
+  <section class="sec" id="s_sys">
+   <div class="chips"><button class="btn on" id="fAll" onclick="setF('all')">ทุกระบบ</button><button class="btn" id="fBad" onclick="setF('bad')">เฉพาะที่มีปัญหา</button>
+    <span style="flex:1"></span><button class="btn" onclick="openAll(true)">กางทั้งหมด</button><button class="btn" onclick="openAll(false)">ย่อทั้งหมด</button></div>
+   <div class="card" style="padding:0;overflow:hidden"><div style="overflow-x:auto"><table id="sysTable"></table></div></div>
+  </section>
+
+  <section class="sec" id="s_teams"><div class="card" id="secTeams"><div id="teamsBody"><div class="msg">กำลังโหลด…</div></div></div></section>
+  <section class="sec" id="s_sheets"><div class="card"><h3>🗂️ ชีททั้งหมดใน Spreadsheet (วันที่ข้อมูลล่าสุด)</h3><div style="overflow-x:auto"><table id="tblSheets"></table></div></div></section>
+  <section class="sec" id="s_trg"><div class="card"><h3>⏰ Trigger</h3><div id="trgBody"></div></div></section>
+ </main>
+</div>
+</div>
+<script>
+var DATA=null, FILTER='all', TOKEN=(function(){try{return sessionStorage.getItem('sm_token')||'';}catch(e){return '';}})(), NONCE='';
+async function sha256(t){var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(function(x){return ('0'+x.toString(16)).slice(-2);}).join('');}
+function lgErr(m){document.getElementById('lgErr').textContent=m||'';}
+function showLogin(msg){document.getElementById('app').style.display='none';document.getElementById('loginBox').style.display='';lgErr(msg);}
+function resetLogin(){NONCE='';document.getElementById('lgHint').textContent='ใส่ User แล้วยืนยัน OTP ที่ส่งเข้าแชท Teams ของคุณ';document.getElementById('step1').style.display='';document.getElementById('step2').style.display='none';lgErr('');}
+var BUSY=false;
+async function doLogin(){
+  if(BUSY)return; BUSY=true;
+  var u=document.getElementById('lgU').value.trim();
+  if(!u){lgErr('กรอก User');BUSY=false;return;}
+  NONCE=(crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g,function(){return (Math.random()*16|0).toString(16);}));
+  // แสดงช่อง OTP ทันที ระหว่างระบบส่ง OTP
+  document.getElementById('step1').style.display='none';document.getElementById('step2').style.display='';
+  document.getElementById('lgHint').textContent='⏳ กำลังส่ง OTP เข้าแชท Teams… (5–10 วินาที)';lgErr('');document.getElementById('lgO').focus();
+  try{ var d=await jsonp({action:'sysLogin',u:u,n:NONCE});
+    if(d&&d.ok){NONCE=d.nonce;document.getElementById('lgHint').textContent='✅ '+(d.note||'ส่ง OTP เข้าแชท Teams แล้ว')+' · ใช้ได้ '+d.expiresMin+' นาที';}
+    else{resetLogin();lgErr((d&&d.error)||'เข้าสู่ระบบไม่สำเร็จ');}
+  }catch(e){resetLogin();lgErr(e.message);}
+  BUSY=false;
+}
+async function doOtp(){
+  if(BUSY)return; BUSY=true;
+  var o=document.getElementById('lgO').value.trim(); if(!/^\d{6}$/.test(o)){lgErr('OTP 6 หลัก');BUSY=false;return;}
+  var b=document.getElementById('otpBtn'); b.disabled=true; b.textContent='กำลังยืนยัน…'; lgErr('');
+  try{ var d=await jsonp({action:'sysOtp',nonce:NONCE,otp:o});
+    if(d&&d.ok){TOKEN=d.token;try{sessionStorage.setItem('sm_token',TOKEN);}catch(e){}document.getElementById('lgO').value='';resetLogin();
+      document.getElementById('grid').innerHTML='<div class="msg">✅ เข้าสู่ระบบแล้ว — กำลังตรวจทุกระบบ… (ครั้งแรก 10–20 วินาที)</div>';
+      document.getElementById('loginBox').style.display='none';document.getElementById('app').style.display='';load();}
+    else{lgErr((d&&d.error)||'OTP ไม่ถูกต้อง'); if(d&&/ใหม่/.test(d.error||''))resetLogin();}
+  }catch(e){lgErr(e.message);}
+  b.disabled=false; b.textContent='ยืนยัน OTP'; BUSY=false;
+}
+function logout(){ if(TOKEN)jsonp({action:'sysLogout',token:TOKEN}).catch(function(){}); TOKEN='';try{sessionStorage.removeItem('sm_token');}catch(e){}DATA=null;showLogin('ออกจากระบบแล้ว'); }
+var LBL={ok:'ปกติ',warn:'เตือน',err:'ผิดพลาด',info:'ข้อมูล'}, ICO={ok:'✅',warn:'⚠️',err:'❌',info:'ℹ️'};
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+// คุยกับ Apps Script ผ่าน iframe ซ่อน (ไม่มีแถบ Google · ไม่ใช้ JSONP)
+var ADMIN_URL='https://script.google.com/macros/s/AKfycbxnFHnV6xFxZgl3JncF3VTf10Lmm6ewrEjADfcKRpKNIbpRzyYG0CWGIko9ZLmgNCdmDA/exec';
+var PENDING={};
+window.addEventListener('message',function(e){
+  var host=''; try{host=new URL(e.origin).hostname;}catch(x){}
+  if(!/\.googleusercontent\.com$/.test(host)&&host!=='script.google.com')return;
+  var m=e.data; if(!m||!m.rid||!PENDING[m.rid])return;
+  var P=PENDING[m.rid]; delete PENDING[m.rid]; clearTimeout(P.t); if(P.f.parentNode)P.f.parentNode.removeChild(P.f); P.res(m.data);
+});
+function jsonp(params){
+  var qs0=Object.keys(params).map(function(k){return k+'='+encodeURIComponent(params[k]);}).join('&');
+  // ทางหลัก: fetch แบบไม่ส่งบัญชี Google (แก้ปัญหาล็อกอินหลายบัญชี) · ไม่ได้ค่อยใช้ iframe
+  return fetch(ADMIN_URL+'?'+qs0+'&_='+Date.now(),{credentials:'omit',redirect:'follow',cache:'no-store'})
+    .then(function(r){ if(!r.ok)throw new Error('HTTP '+r.status); return r.text(); })
+    .then(function(t){ t=t.trim(); if(t.charAt(0)!=='{')throw new Error('not json'); return JSON.parse(t); })
+    .catch(function(){ return jsonpBridge(params); });
+}
+function jsonpBridge(params){
+  return new Promise(function(res,rej){
+    var rid='r'+Date.now()+Math.floor(Math.random()*1e6);
+    var qs=Object.keys(params).map(function(k){return k+'='+encodeURIComponent(params[k]);}).join('&');
+    var f=document.createElement('iframe'); f.style.display='none';
+    f.src=ADMIN_URL+'?page=bridge&rid='+rid+'&'+qs;
+    var t=setTimeout(function(){ delete PENDING[rid]; if(f.parentNode)f.parentNode.removeChild(f); rej(new Error('['+params.action+'] ไม่ตอบกลับภายในเวลา — เช็คว่า Deploy เวอร์ชันใหม่แล้ว')); },(params.action==='sysMonitor')?120000:45000);
+    PENDING[rid]={res:res,f:f,t:t};
+    document.body.appendChild(f);
+  });
+}
+function load(){
+  document.getElementById('sub').textContent='กำลังตรวจ…';
+  if(!TOKEN){showLogin('');return;}
+  jsonp({action:'sysMonitor',token:TOKEN}).then(function(d){
+    if(d&&d.auth===false){TOKEN='';try{sessionStorage.removeItem('sm_token');}catch(e){}showLogin('หมดเวลาใช้งาน — เข้าสู่ระบบใหม่');return;}
+    document.getElementById('loginBox').style.display='none';document.getElementById('app').style.display='';
+    if(!d||!d.ok){document.getElementById('grid').innerHTML='<div class="msg">ตรวจไม่สำเร็จ: '+esc((d&&d.error)||'')+'</div>';return;}
+    DATA=d; render(); loadTeams();
+  }).catch(function(e){document.getElementById('grid').innerHTML='<div class="msg">ตรวจไม่สำเร็จ: '+esc(e.message)+'</div>';});
+}
+function loadTeams(){
+  jsonp({action:'sysTeamsList',token:TOKEN}).then(renderTeams).catch(function(e){document.getElementById('teamsBody').innerHTML='<div style="color:var(--err)">โหลดสวิตช์ไม่ได้: '+esc(e.message)+'</div>';});
+}
+function setTeam(key,on,el){
+  el.disabled=true;
+  jsonp({action:key==='_alerts'?'sysTeamsSet':'sysTeamsSet',token:TOKEN,key:key,on:on?'true':'false'}).then(renderTeams)
+    .catch(function(e){alert('บันทึกไม่ได้: '+e.message);el.checked=!on;el.disabled=false;});
+}
+function forgetTeam(key){ if(!confirm('ลบรายการนี้ออกจากรายการสวิตช์?'))return; jsonp({action:'sysTeamsForget',token:TOKEN,key:key}).then(renderTeams); }
+function renderTeams(d){
+  if(!d||!d.ok){document.getElementById('teamsBody').innerHTML='<div style="color:var(--err)">'+esc((d&&d.error)||'')+'</div>';return;}
+  function sw(key,on){return '<label class="sw"><input type="checkbox" '+(on?'checked':'')+' onchange="setTeam(\''+key+'\',this.checked,this)"><span></span></label>';}
+  var h='<div class="trow" style="background:rgba(245,166,35,.06);padding:10px 8px;border-radius:8px"><div class="tn"><b>การ์ด 🎯 สาขาที่ต้องผลักดัน (@mention) — ทุกรายงาน</b><div>ปิด = ส่งแค่การ์ดหลัก ไม่ส่งการ์ด @mention ตามหลัง</div></div>'+sw('_alerts',d.alertsOn)+'</div>';
+  var tRows=d.rows.filter(function(r){return r.group!=='mail';}), mRows=d.rows.filter(function(r){return r.group==='mail';});
+  function rowH(r){
+    var last=r.on?(r.sent?'ส่งล่าสุด '+r.sent:'ยังไม่เคยส่งหลังติดตั้งสวิตช์'):(r.blocked?'⏸ หยุดส่ง · ถูกกันล่าสุด '+r.blocked:'⏸ หยุดส่ง');
+    return '<div class="trow"><div class="tn"><b>'+esc(r.label)+'</b>'+(r.auto?' <span style="font-size:11px;color:#f5a623">ใหม่</span>':'')+
+      '<div>'+esc(r.from)+' · '+esc(last)+(r.auto?' · <a href="#" onclick="forgetTeam(\''+r.key+'\');return false" style="color:var(--muted)">ลบออกจากรายการ</a>':'')+'</div></div>'+sw(r.key,r.on)+'</div>';
+  }
+  h+=tRows.map(rowH).join('');
+  if(mRows.length) h+='<h3 id="mailHead" style="margin:18px 0 6px">📧 รายงานอีเมล — เปิด / ปิด</h3><div style="font-size:13px;color:var(--muted);margin-bottom:4px">ปิด = ไม่ส่งอีเมลรายงานนั้น · การดึงไฟล์จากเมลเข้าระบบไม่กระทบ</div>'+mRows.map(function(r){ if(r.key==='mail_all'){ var x=Object.assign({},r); x.sent=r.on?'ใช้งาน':''; return rowH(x);} return rowH(r); }).join('');
+  document.getElementById('teamsBody').innerHTML=h; document.getElementById('secTeams').style.display='';
+}
+
+var FILTER='all', OPEN={}, SEC='ov';
+var TITLES={ov:'ภาพรวม',sys:'ระบบทั้งหมด',teams:'รายงาน MS Teams',mail:'รายงานอีเมล',sheets:'ชีทข้อมูล',trg:'Trigger'};
+var RANK={err:3,warn:2,info:1,ok:0};
+function sec(s){ SEC=s; var real=(s==='mail')?'teams':s;
+  document.querySelectorAll('#nav a').forEach(function(a){a.classList.toggle('on',a.dataset.s===s);});
+  document.querySelectorAll('.sec').forEach(function(x){x.classList.toggle('on',x.id==='s_'+real);});
+  document.getElementById('secTitle').textContent=TITLES[s]||'';
+  if(s==='mail'){ setTimeout(function(){var h=document.getElementById('mailHead'); if(h)h.scrollIntoView({behavior:'smooth',block:'start'});},50); }
+  else window.scrollTo(0,0);
+}
+function setF(f){FILTER=f;document.getElementById('fAll').className='btn'+(f==='all'?' on':'');document.getElementById('fBad').className='btn'+(f==='bad'?' on':'');renderSystems();}
+function openAll(v){ (DATA&&DATA.systems||[]).forEach(function(s){OPEN[s.id]=v;}); renderSystems(); }
+function toggle(id){ OPEN[id]=!OPEN[id]; renderSystems(); }
+function goSys(id){ OPEN[id]=true; FILTER='all'; sec('sys'); renderSystems(); setTimeout(function(){var r=document.getElementById('row_'+id); if(r)r.scrollIntoView({behavior:'smooth',block:'center'});},60); }
+function grpStat(s,g){ var st=null,txt=''; s.checks.forEach(function(c){ if(c.group!==g)return; if(st===null||RANK[c.status]>RANK[st]){st=c.status;txt=c.text;} }); return st?{st:st,txt:txt}:null; }
+function mini(x,short){ if(!x)return '<span style="color:var(--muted)">—</span>'; return '<span class="mini" title="'+esc(x.txt)+'"><span class="dot bg-'+x.st+'"></span>'+esc(short||LBL[x.st])+'</span>'; }
+function dataShort(s){ var x=grpStat(s,'ข้อมูล'); if(!x)return null; var m=x.txt.match(/ล่าสุด\s+(\d{4}-\d{2}-\d{2})/), lag=x.txt.match(/ขาด\s+(\d+)\s+วัน/);
+  return {st:x.st,txt:x.txt,short:m?m[1].slice(5).replace('-','/')+(lag?' · ขาด '+lag[1]+' วัน':''):(x.st==='info'?'ภายนอก':LBL[x.st])}; }
+function render(){
+  if(!DATA)return;
+  document.getElementById('grid').innerHTML='';
+  var c={ok:0,warn:0,err:0,info:0}; DATA.systems.forEach(function(s){c[s.status]++;});
+  document.getElementById('sub').textContent='ตรวจเมื่อ '+DATA.checkedAt+(DATA.cached?' (ผลล่าสุดภายใน 3 นาที)':'')+' · เทียบข้อมูลกับเมื่อวาน ('+DATA.yesterday+')';
+  document.getElementById('kpis').innerHTML=
+    kpi('ระบบทั้งหมด',DATA.systems.length,'')+kpi('ปกติ',c.ok,'k-ok','ok')+kpi('เตือน',c.warn,'k-warn','warn')+kpi('ผิดพลาด',c.err,'k-err','err')+
+    kpi('Trigger',DATA.triggerTotal+'<span style="font-size:16px;color:var(--muted)">/20</span>',DATA.triggerTotal>=19?'k-err':'k-info',DATA.triggerTotal>=19?'err':'');
+  var bad=c.err+c.warn, cs=document.getElementById('cSys'); cs.textContent=bad||DATA.systems.length; cs.className='cnt'+(c.err?' e':(c.warn?' w':''));
+  var sl=DATA.sheets.filter(function(x){return x.latest&&x.lag>0;}).length, ch=document.getElementById('cSh'); ch.textContent=sl||'✓'; ch.className='cnt'+(sl?' w':'');
+  var tb=0; DATA.systems.forEach(function(s){s.checks.forEach(function(k){if(k.group==='Trigger'&&k.status!=='ok')tb++;});});
+  var ct=document.getElementById('cTr'); ct.textContent=tb||DATA.triggerTotal; ct.className='cnt'+(tb?' e':'');
+  renderTodo(); renderSystems(); renderSheets(); renderTriggers();
+}
+function kpi(l,n,cls,col){ return '<div class="kpi '+cls+'"><div class="l">'+l+'</div><div class="n'+(col?' '+col:'')+'">'+n+'</div></div>'; }
+function renderTodo(){
+  var items=[]; DATA.systems.forEach(function(s){ s.checks.forEach(function(k){ if(k.status==='err'||k.status==='warn')items.push({s:s,k:k}); }); });
+  items.sort(function(a,b){return RANK[b.k.status]-RANK[a.k.status];});
+  document.getElementById('todo').innerHTML=items.length?items.map(function(x){
+    return '<div class="todo" onclick="goSys(\''+x.s.id+'\')"><span class="pill bg-'+x.k.status+'">'+LBL[x.k.status]+'</span><div style="flex:1"><b>'+x.s.icon+' '+esc(x.s.name)+'</b> <span style="color:var(--muted);font-size:13px">· '+esc(x.k.group)+'</span>'+
+      '<div style="font-size:14px;margin-top:2px">'+esc(x.k.text)+'</div>'+(x.k.fix?'<div class="fix">🔧 '+esc(x.k.fix)+'</div>':'')+'</div><span class="chev">›</span></div>';
+  }).join(''):'<div class="msg">🎉 ทุกระบบปกติ ไม่มีอะไรต้องแก้</div>';
+}
+function flowHtml(s){
+  var sheets=s.checks.filter(function(x){return x.group==='ข้อมูล'&&x.status!=='info';}).map(function(x){return x.text.split(' → ')[0].split(' · ').pop();});
+  var f=[node('แหล่ง',esc(s.source))];
+  if(s.triggers&&s.triggers.length)f.push(node('Import',esc(s.triggers.join(', '))));
+  if(sheets.length)f.push(node('ชีท',esc(sheets.join(', '))));
+  if(s.api&&s.api.length)f.push(node('API',esc(s.api.join(', '))));
+  if(s.pages&&s.pages.length)f.push(node('หน้าเว็บ',esc(s.pages.join(', '))));
+  if(s.teams&&s.teams.length)f.push(node('Teams',esc(s.teams.join(', '))));
+  return '<div class="flow">'+f.join('<span class="arr">→</span>')+'</div>';
+}
+function node(k,v){return '<span class="node"><span class="k">'+k+'</span>'+v+'</span>';}
+function renderSystems(){
+  if(!DATA)return;
+  var list=DATA.systems.slice().sort(function(a,b){return RANK[b.status]-RANK[a.status];}).filter(function(s){return FILTER==='all'||s.status==='err'||s.status==='warn';});
+  var h='<thead><tr><th style="width:34px"></th><th>ระบบ</th><th>สถานะ</th><th>ข้อมูลล่าสุด</th><th>Trigger</th><th>โค้ด</th><th>Teams</th><th>อีเมล</th></tr></thead><tbody>';
+  h+=list.map(function(s){
+    var d=dataShort(s), open=!!OPEN[s.id];
+    var row='<tr class="sys'+(open?' open':'')+'" id="row_'+s.id+'" onclick="toggle(\''+s.id+'\')"><td><span class="chev">›</span></td>'+
+      '<td><b>'+s.icon+' '+esc(s.name)+'</b><div style="font-size:12px;color:var(--muted)">'+esc(s.source)+'</div></td>'+
+      '<td><span class="pill bg-'+s.status+'">'+LBL[s.status]+'</span></td>'+
+      '<td>'+(d?'<span class="mini" title="'+esc(d.txt)+'"><span class="dot bg-'+d.st+'"></span>'+esc(d.short)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'+
+      '<td>'+mini(grpStat(s,'Trigger'))+'</td><td>'+mini(grpStat(s,'โค้ด'))+'</td><td>'+mini(grpStat(s,'Teams'))+'</td><td>'+mini(grpStat(s,'อีเมล'))+'</td></tr>';
+    if(!open)return row;
+    var checks=s.checks.map(function(x){return '<div class="ck"><span class="g">'+esc(x.group)+'</span><span>'+ICO[x.status]+'</span><div style="flex:1"><span class="'+x.status+'">'+esc(x.text)+'</span>'+(x.fix&&x.status!=='ok'?'<div class="fix">🔧 '+esc(x.fix)+'</div>':'')+'</div></div>';}).join('');
+    return row+'<tr class="detail"><td colspan="8"><div class="det"><div><h4>รายการตรวจ</h4>'+checks+'</div><div><h4>เส้นทางข้อมูล</h4>'+flowHtml(s)+
+      '<h4 style="margin-top:12px">ไฟล์ที่เกี่ยวข้อง</h4><div class="files">'+(s.files||[]).map(function(f){return '<code>'+esc(f)+'</code>';}).join('')+'</div>'+
+      (s.pages&&s.pages.length?'<h4 style="margin-top:12px">หน้าเว็บ</h4><div style="font-size:13px">'+s.pages.map(esc).join('<br>')+'</div>':'')+'</div></div></td></tr>';
+  }).join('');
+  document.getElementById('sysTable').innerHTML=h+'</tbody>'+(list.length?'':'<tr><td colspan="8"><div class="msg">🎉 ไม่มีระบบที่มีปัญหา</div></td></tr>');
+}
+function renderSheets(){
+  var sh=DATA.sheets.slice().sort(function(a,b){return (b.lag==null?-99:b.lag)-(a.lag==null?-99:a.lag);});
+  document.getElementById('tblSheets').innerHTML='<thead><tr><th>ชีท</th><th style="text-align:right">จำนวนแถว</th><th>ข้อมูลล่าสุด</th><th>สถานะ</th></tr></thead><tbody>'+
+    sh.map(function(x){ var st=x.latest?(x.lag<=0?'<span class="ok">✅ ถึงเมื่อวาน</span>':(x.lag===1?'<span class="warn">⚠️ ช้า 1 วัน</span>':'<span class="err">❌ ขาด '+x.lag+' วัน</span>')):'<span style="color:var(--muted)">— ไม่มีคอลัมน์วันที่</span>';
+      return '<tr><td>'+esc(x.name)+'</td><td style="text-align:right">'+(x.rows||0).toLocaleString('en-US')+'</td><td>'+(x.latest||'-')+'</td><td>'+st+'</td></tr>'; }).join('')+'</tbody>';
+}
+function renderTriggers(){
+  var rows=[]; DATA.systems.forEach(function(s){ s.checks.forEach(function(k){ if(k.group==='Trigger'||k.group==='อีเมล')rows.push({s:s,k:k}); }); });
+  rows.sort(function(a,b){return RANK[b.k.status]-RANK[a.k.status];});
+  var h='<div style="margin-bottom:12px;font-size:14px">ใช้อยู่ <b style="font-size:20px;color:'+(DATA.triggerTotal>=19?'var(--err)':'var(--lime)')+'">'+DATA.triggerTotal+'</b> / 20 ตัว</div>';
+  h+='<table><thead><tr><th>Trigger</th><th>ระบบ</th><th>สถานะ</th></tr></thead><tbody>'+rows.map(function(x){
+    return '<tr><td>'+esc(x.k.text.split(' ')[0])+'</td><td>'+x.s.icon+' '+esc(x.s.name)+'</td><td><span class="'+x.k.status+'">'+ICO[x.k.status]+' '+esc(x.k.text)+'</span>'+(x.k.fix&&x.k.status!=='ok'?'<div class="fix">🔧 '+esc(x.k.fix)+'</div>':'')+'</td></tr>';}).join('')+'</tbody></table>';
+  h+='<h3 style="margin:18px 0 8px">Trigger อื่นที่ไม่ได้ผูกกับระบบในแผนที่</h3><div style="font-size:14px;color:var(--muted)">'+((DATA.triggerOthers||[]).length?DATA.triggerOthers.map(esc).join(' · '):'— ไม่มี')+'</div>';
+  document.getElementById('trgBody').innerHTML=h;
+}
+
+load();
+</script>
+</body></html>
